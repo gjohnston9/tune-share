@@ -2,6 +2,7 @@ js-piano
 ========
 
 A simple Javascript piano.
+
 Coming soon (as of December 2016): the ability to record a tune and share it.
 
 Features:
