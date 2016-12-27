@@ -36,11 +36,7 @@ audio {
   padding: 5px;
 }
 
-.piano-container {
-  text-align: center;
-}
-
-.buttons-container {
+.piano-container, .buttons-container {
   text-align: center;
 }
 
