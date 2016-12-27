@@ -40,7 +40,7 @@ var recorded_events = [];
   var seconds_elapsed = 0;
   var update_interval;
 
-  var test_string = "3.57.153_2.57.2428_3.56.184_2.56.762_3.55.239_2.55.1098_3.57.69_3.56.48_3.55.47_2.57.26_2.56.192_3.57.10_3.56.53_2.55.32_2.56.59";
+  var test_string = "0.A4.100_1.A4.757_0.E4.100_1.E4.925_0.F3.72_1.F3.2032_3.57.96_2.57.783_3.56.79_2.56.730_3.55.101";
 
   function clock_update() {
     var minutes, seconds;
@@ -72,6 +72,10 @@ var recorded_events = [];
       $("#share-url").hide();
     }
     recording = !recording;
+  }
+
+  function play_back(events_array) {
+    // TODO
   }
 
   $(document).ready(function() {
@@ -295,7 +299,7 @@ var recorded_events = [];
         recorded_events.push(
           {"timeStamp" : event.timeStamp,
           "type" : event.type, // event.type is a string
-          "keyboard_code" : codes[keys.indexOf(key)]}
+          "piano_key" : key}
         );
       }
     });
@@ -308,7 +312,7 @@ var recorded_events = [];
       recorded_events.push(
         {"timeStamp" : event.timeStamp,
         "type" : event.type,
-        "keyboard_code" : event.which}
+        "code" : event.which}
       );
     }
   });
@@ -338,8 +342,14 @@ var recorded_events = [];
       event = events[i]
       next = events[i+1]
       difference = Math.floor(next["timeStamp"] - event["timeStamp"]);
-      code = event["keyboard_code"];
       event_num = event_type_to_num[event["type"]];
+      if (event_num < 2) {
+        // mouseup/mousedown
+        code = event["piano_key"];
+      } else {
+        // keyup/keydown
+        code = event["code"];
+      }
       string += [event_num, code, difference].join(".");
       if (i < events.length - 2) {
         string += "_";
@@ -348,18 +358,26 @@ var recorded_events = [];
     return string;
   }
 
-  // (var test_string = "3.57.153_2.57.2428_3.56.184_2.56.762_3.55.239_2.55.1098_3.57.69_3.56.48_3.55.47_2.57.26_2.56.192_3.57.10_3.56.53_2.55.32_2.56.59";)
-
   function string_to_events(events_string) {
     var ret = [];
     var items;
     events_string.split("_").forEach(function(event) {
       items = event.split(".")
-      ret.push({
-        "type" : num_to_event_type[items[0]],
-        "keyboard_code" : items[1],
-        "difference" : items[2]
-      });
+      if (items[0] < 2) {
+        // mouseup/mousedown
+        ret.push({
+          "type" : num_to_event_type[items[0]],
+          "piano_key" : items[1],
+          "difference" : items[2]
+        });     
+      } else {
+        // keydown/keyup
+        ret.push({
+          "type" : num_to_event_type[items[0]],
+          "code" : items[1],
+          "difference" : items[2]
+        });
+      } 
     });
     return ret;
   }
