@@ -1,5 +1,22 @@
 /**
+Old license (from forked project):
   Copyright 2012 Michael Morris-Pearce
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+My license:
+  Copyright 2016 Greg Johnston
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -15,7 +32,64 @@
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+var recorded_events = [];
+
 (function() {
+  /* Recording functionality */
+  var recording = false;
+  var seconds_elapsed = 0;
+  var update_interval;
+
+  var test_string = "3.57.153_2.57.2428_3.56.184_2.56.762_3.55.239_2.55.1098_3.57.69_3.56.48_3.55.47_2.57.26_2.56.192_3.57.10_3.56.53_2.55.32_2.56.59";
+
+  function clock_update() {
+    var minutes, seconds;
+    if (recording) {
+      seconds_elapsed++;
+      minutes = Math.floor(seconds_elapsed / 60);
+      seconds = seconds_elapsed % 60;
+      if (seconds < 10) {
+        seconds = "0" + seconds;
+      }
+      document.getElementById("clock").innerHTML = minutes + ":" + seconds;
+    }
+  }
+
+  function record_toggle() {
+    if (recording) { // stop recording
+      var tune_string = events_to_string(recorded_events);
+      document.getElementById("share-url").innerHTML = "The URL for your tune is [base-url]/" + tune_string;
+      $("#share-url").show();
+
+      document.getElementById("record-button").innerHTML = "Record";
+      document.getElementById("clock").innerHTML = "0:00";
+      clearInterval(update_interval);
+      seconds_elapsed = 0;
+    } else { // start recording
+      recorded_events = [];
+      update_interval = setInterval(clock_update, 1000);
+      document.getElementById("record-button").innerHTML = "Stop Recording";
+      $("#share-url").hide();
+    }
+    recording = !recording;
+  }
+
+  $(document).ready(function() {
+      $("#toggle-display-button").click(function() {
+        $("#recording-container").slideToggle();
+      });
+
+      $("#record-button").click(function() {
+        record_toggle();
+      });
+
+      $("#playback-button").click(function() {
+        var events = string_to_events(test_string); // test conversion from string to events
+        console.log(events);
+        // TODO: play back events
+
+      })
+  });
 
   /* Piano keyboard pitches. Names match sound files by ID attribute. */
   
@@ -147,7 +221,9 @@
   
   var sustaining = false;
 
-  /* Register mouse event callbacks. */
+
+
+  /* Register mouse event callbacks (for playing piano). */
   
   keys.forEach(function(key) {
     $(pianoClass(key)).mousedown(function() {
@@ -173,7 +249,7 @@
     }
   });
 
-  /* Register keyboard event callbacks. */
+  /* Register keyboard event callbacks (for playing piano). */
   
   $(document).keydown(function(event) {
     if (event.which === pedal) {
@@ -208,5 +284,84 @@
       }
     }
   });
+
+
+
+  /* Register mouse event callbacks (for recording events). */
+
+  keys.forEach(function(key) {
+    $(pianoClass(key)).on("mousedown mouseup", function(event) {
+      if (recording) {
+        recorded_events.push(
+          {"timeStamp" : event.timeStamp,
+          "type" : event.type, // event.type is a string
+          "keyboard_code" : codes[keys.indexOf(key)]}
+        );
+      }
+    });
+  });
+
+  /* Register keyboard event callbacks (for recording events). */
+
+  $(document).on("keyup keydown", function(event) {
+    if (recording) {
+      recorded_events.push(
+        {"timeStamp" : event.timeStamp,
+        "type" : event.type,
+        "keyboard_code" : event.which}
+      );
+    }
+  });
+
+
+
+  /* For converting recorded events to a string, or the other way around */
+
+  var event_type_to_num = {
+    "mousedown" : 0,
+    "mouseup" : 1,
+    "keyup" : 2,
+    "keydown" : 3
+  }
+
+  var num_to_event_type = {
+    0 : "mousedown",
+    1 : "mouseup",
+    2 : "keyup",
+    3 : "keydown"
+  }
+
+  function events_to_string(events) {
+    var string = "";
+    var event, next, difference, code, event_num;
+    for (var i = 0; i < events.length - 1; i++) {
+      event = events[i]
+      next = events[i+1]
+      difference = Math.floor(next["timeStamp"] - event["timeStamp"]);
+      code = event["keyboard_code"];
+      event_num = event_type_to_num[event["type"]];
+      string += [event_num, code, difference].join(".");
+      if (i < events.length - 2) {
+        string += "_";
+      }
+    };
+    return string;
+  }
+
+  // (var test_string = "3.57.153_2.57.2428_3.56.184_2.56.762_3.55.239_2.55.1098_3.57.69_3.56.48_3.55.47_2.57.26_2.56.192_3.57.10_3.56.53_2.55.32_2.56.59";)
+
+  function string_to_events(events_string) {
+    var ret = [];
+    var items;
+    events_string.split("_").forEach(function(event) {
+      items = event.split(".")
+      ret.push({
+        "type" : num_to_event_type[items[0]],
+        "keyboard_code" : items[1],
+        "difference" : items[2]
+      });
+    });
+    return ret;
+  }
 
 })();
