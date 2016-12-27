@@ -1,9 +1,7 @@
-js-piano
+tune-share
 ========
 
-A simple Javascript piano.
-
-Coming soon (as of December 2016): the ability to record a tune and share it.
+A simple Javascript piano. Coming soon (as of December 2016): the ability to record a tune and share it.
 
 Features:
 
