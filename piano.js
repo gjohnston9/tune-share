@@ -74,8 +74,37 @@ var recorded_events = [];
     recording = !recording;
   }
 
-  function play_back(events_array) {
-    // TODO
+  function play_note(event) {
+    if (event["type"] == "mousedown") {
+      console.log("triggering mousedown at piano key " + event["piano_key"]);
+      $(pianoClass(event["piano_key"])).mousedown();
+    }
+    else if (event["type"] == "mouseup") {
+      console.log("triggering mouseup at piano key " + event["piano_key"]);
+      $(pianoClass(event["piano_key"])).mouseup();
+    } else {
+      // keydown or keyup
+      console.log("triggering " + event["type"] + "; code is " + event["code"]);
+      var press = $.Event(event["type"], {keyCode : event["code"]});
+      $("document").trigger(press);
+    }
+  }
+
+  function play_back_recursive(events_array) {
+    var index = 0;
+    var diff;
+    function play_one() {
+      if (index >= events_array.length) {
+        return;
+      }
+      play_note(events_array[index]);
+      diff = events_array[index]["difference"];
+      console.log("waiting for " + diff + " milliseconds.");
+      index++;
+      setTimeout(play_one, diff);
+    }
+    play_one();
+    console.log("done!");
   }
 
   $(document).ready(function() {
@@ -90,8 +119,7 @@ var recorded_events = [];
       $("#playback-button").click(function() {
         var events = string_to_events(test_string); // test conversion from string to events
         console.log(events);
-        // TODO: play back events
-
+        play_back_recursive(events);
       })
   });
 
@@ -361,7 +389,9 @@ var recorded_events = [];
   function string_to_events(events_string) {
     var ret = [];
     var items;
-    events_string.split("_").forEach(function(event) {
+    var events_split = events_string.split("_");
+    for (var i = 0; i < events_split.length; i++) {
+      event = events_split[i];
       items = event.split(".")
       if (items[0] < 2) {
         // mouseup/mousedown
@@ -378,7 +408,7 @@ var recorded_events = [];
           "difference" : items[2]
         });
       } 
-    });
+    };
     return ret;
   }
 
