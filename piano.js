@@ -40,7 +40,7 @@ var recorded_events = [];
   var seconds_elapsed = 0;
   var update_interval;
 
-  var test_string = "0.A4.100_1.A4.757_0.E4.100_1.E4.925_0.F3.72_1.F3.2032_3.57.96_2.57.783_3.56.79_2.56.730_3.55.101";
+  var test_string = "3.57.208_2.57.297_3.56.238_2.56.315_3.55.218_2.55.269_3.56.197_2.56.295_3.57.197_2.57.255_3.57.206_2.57.317_3.57.218_2.57.1662_0.A4.69_1.A4.697_0.G4.100_1.G4.667_0.F4.99_1.F4.971_0.G4.44_1.G4.798_0.A4.99_1.A4.810_0.A4.100_1.A4.924_0.A4.99";
 
   function clock_update() {
     var minutes, seconds;
@@ -85,8 +85,10 @@ var recorded_events = [];
     } else {
       // keydown or keyup
       console.log("triggering " + event["type"] + "; code is " + event["code"]);
-      var press = $.Event(event["type"], {keyCode : event["code"]});
-      $("document").trigger(press);
+      var press = $.Event(event["type"]);
+      press.keyCode = event["code"];
+      press.which = event["code"];
+      $(document).trigger(press);
     }
   }
 
@@ -104,7 +106,6 @@ var recorded_events = [];
       setTimeout(play_one, diff);
     }
     play_one();
-    console.log("done!");
   }
 
   $(document).ready(function() {
@@ -288,10 +289,14 @@ var recorded_events = [];
       sustaining = true;
       $(pianoClass('pedal')).addClass('piano-sustain');
     }
+    console.log("\n\ncaptured keydown event. event is:");
+    console.log(event);
     press(keydown(event.which));
   });
   
   $(document).keyup(function(event) {
+    console.log("\n\ncaptured keyup event. event is:");
+    console.log(event);
     if (event.which === pedal) {
       sustaining = false;
       $(pianoClass('pedal')).removeClass('piano-sustain');
