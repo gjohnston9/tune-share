@@ -40,7 +40,7 @@ var recorded_events = [];
   var seconds_elapsed = 0;
   var update_interval;
 
-  var test_string = "3.57.208_2.57.297_3.56.238_2.56.315_3.55.218_2.55.269_3.56.197_2.56.295_3.57.197_2.57.255_3.57.206_2.57.317_3.57.218_2.57.1662_0.A4.69_1.A4.697_0.G4.100_1.G4.667_0.F4.99_1.F4.971_0.G4.44_1.G4.798_0.A4.99_1.A4.810_0.A4.100_1.A4.924_0.A4.99";
+  var test_string = "3.80.95_2.80.192_3.80.95_2.80.200_3.80.104_2.80.0";
 
   function clock_update() {
     var minutes, seconds;
@@ -369,22 +369,27 @@ var recorded_events = [];
   }
 
   function events_to_string(events) {
+    var single_event, difference, code, event_num;
     var string = "";
-    var event, next, difference, code, event_num;
-    for (var i = 0; i < events.length - 1; i++) {
-      event = events[i]
-      next = events[i+1]
-      difference = Math.floor(next["timeStamp"] - event["timeStamp"]);
-      event_num = event_type_to_num[event["type"]];
+
+    for (var i = 0; i < events.length; i++) {
+      single_event = events[i];
+      if (i == events.length - 1) {
+        difference = 0;
+      } else {
+        difference = Math.floor(events[i+1]["timeStamp"] - single_event["timeStamp"]);  
+      }
+      
+      event_num = event_type_to_num[single_event["type"]];
       if (event_num < 2) {
         // mouseup/mousedown
-        code = event["piano_key"];
+        code = single_event["piano_key"];
       } else {
         // keyup/keydown
-        code = event["code"];
+        code = single_event["code"];
       }
       string += [event_num, code, difference].join(".");
-      if (i < events.length - 2) {
+      if (i < events.length - 1) {
         string += "_";
       }
     };
@@ -396,8 +401,7 @@ var recorded_events = [];
     var items;
     var events_split = events_string.split("_");
     for (var i = 0; i < events_split.length; i++) {
-      event = events_split[i];
-      items = event.split(".")
+      items = events_split[i].split(".")
       if (items[0] < 2) {
         // mouseup/mousedown
         ret.push({
@@ -409,8 +413,8 @@ var recorded_events = [];
         // keydown/keyup
         ret.push({
           "type" : num_to_event_type[items[0]],
-          "code" : items[1],
-          "difference" : items[2]
+          "code" : parseInt(items[1], 10),
+          "difference" : parseInt(items[2], 10)
         });
       } 
     };
