@@ -42,7 +42,7 @@ var recorded_events = [];
 	var seconds_elapsed = 0;
 	var update_interval;
 
-	var test_string = "3.80.95_2.80.192_3.80.95_2.80.200_3.80.104_2.80.0";
+	var test_string = "3.79.95_2.79.608_3.80.112_2.80.751_3.80.96_2.80.855_3.80.500_3.80.33_3.80.32_3.80.32_3.80.33_3.80.33_3.80.33_3.80.33_3.80.33_3.80.32_3.80.33_3.80.33_3.80.8_2.80.0";
 
 	function clock_update() {
 		var minutes, seconds;
@@ -60,7 +60,7 @@ var recorded_events = [];
 	function record_toggle() {
 		if (recording) { // stop recording
 			var tune_string = events_to_string(recorded_events);
-			document.getElementById("share-url").innerHTML = "The URL for your tune is [base-url]/" + tune_string;
+			document.getElementById("share-url").innerHTML = "The URL for your tune is " + window.location.href + "?" + $.param({"tune" : tune_string});
 			$("#share-url").show();
 
 			document.getElementById("record-button").innerHTML = "Record";
