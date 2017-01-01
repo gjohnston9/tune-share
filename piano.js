@@ -42,9 +42,10 @@ My license:
 	var update_interval;
 
 	var recorded_events = []; // keeps track of events while recording
-	var recorded_tune_string = ""; // holds string representing most recently recorded tune (updated only when "Stop recording" is pressed)
+	var recorded_tune_string = null; // holds string representing most recently recorded tune (updated only when "Stop recording" is pressed)
 
-	var url_tune_string = null; // if present, tune in url is parsed in $(document).ready below and assigned to this variable
+	// if present, tune in url is parsed in $(document).ready below and assigned to this variable
+	var url_tune_string = null;
 
 	function clock_update() {
 		var minutes, seconds;
@@ -66,7 +67,7 @@ My license:
 			$("#share-url").show();
 
 			document.getElementById("record-button").innerHTML = "Record";
-			document.getElementById("playback-button").disabled = false;
+			document.getElementById("playback-recorded-button").disabled = false;
 			document.getElementById("clock").innerHTML = "0:00";
 			clearInterval(update_interval);
 			seconds_elapsed = 0;
@@ -74,7 +75,7 @@ My license:
 			recorded_events = [];
 			update_interval = setInterval(clock_update, 1000);
 			document.getElementById("record-button").innerHTML = "Stop Recording";
-			document.getElementById("playback-button").disabled = true;
+			document.getElementById("playback-recorded-button").disabled = true;
 			$("#share-url").hide();
 		}
 		recording = !recording;
@@ -96,11 +97,22 @@ My license:
 	}
 
 	function play_back_recursive(events_array) {
+		/* disable playback buttons, then
+		play back notes in events_array, then
+		enable playback buttons
+
+		(have to reenable from inside this function, because of how
+		setTimeout works) */
 		var index = 0;
 		var diff;
 		function play_one() {
 			if (index >= events_array.length) {
-				document.getElementById("playback-button").disabled = false;
+				if (url_tune_string != null) {
+					document.getElementById("playback-url-button").disabled = false;
+				}
+				if (recorded_tune_string != null) {
+					document.getElementById("playback-recorded-button").disabled = false;	
+				}				
 				return;
 			}
 			play_note(events_array[index]);
@@ -108,13 +120,18 @@ My license:
 			index++;
 			setTimeout(play_one, diff);
 		}
-		document.getElementById("playback-button").disabled = true;
+		if (url_tune_string != null) {
+			document.getElementById("playback-url-button").disabled = true;
+		}
+		if (recorded_tune_string != null) {
+			document.getElementById("playback-recorded-button").disabled = true;	
+		}
 		play_one();
 	}
 
 	$(document).ready(function() {
 			$("#toggle-display-button").click(function() {
-				$("#recording-container").slideToggle(); // TODO: change all of these ids...
+				$("#recording-playback-container").slideToggle();
 				$(this).text( $(this).text() == "Hide recording/playback buttons" ? "Show recording/playback buttons" : "Hide recording/playback buttons");
 			});
 
@@ -122,17 +139,17 @@ My license:
 				record_toggle();
 			});
 
-			$("#playback-button").click(function() {
+			$("#playback-recorded-button").click(function() {
 				var events = string_to_events(recorded_tune_string);
 				play_back_recursive(events);
 			})
 
-			$("#url-playback-button").click(function() {
+			$("#playback-url-button").click(function() {
 				var events = string_to_events(url_tune_string);
 				play_back_recursive(events);
 			})
 
-			document.getElementById("playback-button").disabled = true;
+			document.getElementById("playback-recorded-button").disabled = true;
 
 			var regex = /tune=([\w\._]+)/;
 			var url_vars = window.location.search.substring(1);
@@ -141,18 +158,18 @@ My license:
 			if (match != null) {
 				url_tune_string = match[1];
 				console.log("parsed tune string: " + url_tune_string);
-				document.getElementById("url-playback-button").disabled = false;
+				document.getElementById("playback-url-button").disabled = false;
 			} else {
-				document.getElementById("url-playback-button").disabled = true;
+				document.getElementById("playback-url-button").disabled = true;
 			}
 	});
 
 	/* Piano keyboard pitches. Names match sound files by ID attribute. */
 	
 	var keys =[
-		'A2', 'Bb2', 'B2', 'C3', 'Db3', 'D3', 'Eb3', 'E3', 'F3', 'Gb3', 'G3', 'Ab3',
-		'A3', 'Bb3', 'B3', 'C4', 'Db4', 'D4', 'Eb4', 'E4', 'F4', 'Gb4', 'G4', 'Ab4',
-		'A4', 'Bb4', 'B4', 'C5'
+		"A2", "Bb2", "B2", "C3", "Db3", "D3", "Eb3", "E3", "F3", "Gb3", "G3", "Ab3",
+		"A3", "Bb3", "B3", "C4", "Db4", "D4", "Eb4", "E4", "F4", "Gb4", "G4", "Ab4",
+		"A4", "Bb4", "B4", "C5"
 	];
 
 	/* Corresponding keyboard keycodes, in order w/ 'keys'. */
@@ -167,7 +184,7 @@ My license:
 	];
 	
 	var pedal = 32; /* Keycode for sustain pedal. */
-	var tonic = 'A2'; /* Lowest pitch. */
+	var tonic = "A2"; /* Lowest pitch. */
 	
 	/* Piano state. */
 	
@@ -177,11 +194,11 @@ My license:
 	/* Selectors */
 	
 	function pianoClass(name) {
-		return '.piano-' + name;
+		return ".piano-" + name;
 	};
 	
 	function soundId(id) {
-		return 'sound-' + id;
+		return "sound-" + id;
 	};
 	
 	function sound(id) {
@@ -220,7 +237,7 @@ My license:
 			}
 		}
 		$(pianoClass(key)).animate({
-			'backgroundColor': '#88FFAA'
+			"backgroundColor": "#88FFAA"
 		}, 0);
 	};
 
@@ -259,12 +276,12 @@ My license:
 			}
 			if (key.length > 2) {
 				$(pianoClass(key)).animate({
-					'backgroundColor': 'black'
-				}, 300, 'easeOutExpo');
+					"backgroundColor": "black"
+				}, 300, "easeOutExpo");
 			} else {
 				$(pianoClass(key)).animate({
-					'backgroundColor': 'white'
-				}, 300, 'easeOutExpo');
+					"backgroundColor": "white"
+				}, 300, "easeOutExpo");
 			}
 		};
 	};
@@ -284,7 +301,7 @@ My license:
 	keys.forEach(function(key) {
 		$(pianoClass(key)).mousedown(function() {
 			$(pianoClass(key)).animate({
-				'backgroundColor': '#88FFAA'
+				"backgroundColor": "#88FFAA"
 			}, 0);
 			press(key);
 		});
@@ -310,7 +327,7 @@ My license:
 	$(document).keydown(function(event) {
 		if (event.which === pedal) {
 			sustaining = true;
-			$(pianoClass('pedal')).addClass('piano-sustain');
+			$(pianoClass("pedal")).addClass("piano-sustain");
 		}
 		press(keydown(event.which));
 	});
@@ -318,7 +335,7 @@ My license:
 	$(document).keyup(function(event) {
 		if (event.which === pedal) {
 			sustaining = false;
-			$(pianoClass('pedal')).removeClass('piano-sustain');
+			$(pianoClass("pedal")).removeClass("piano-sustain");
 			Object.keys(depressed).forEach(function(key) {
 				if (!depressed[key]) {
 					if (fadeout) {
