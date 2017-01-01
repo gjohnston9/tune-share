@@ -1,7 +1,9 @@
 tune-share
 ========
 
-A simple Javascript piano. Coming soon (as of December 2016): the ability to record a tune and share it.
+A simple Javascript piano, with the ability to record a tune and share it.
+
+Tunes are currently shared by creating a URL that directly encodes whichever tune was just recorded. In the future, a Firebase database will be used instead, so a short URL will be generated that corresponds to an entry in the database.
 
 Features:
 
@@ -12,7 +14,7 @@ Features:
 
 Known Issues:
 
-* Key rollover. Basic USB keyboards have a physical limit of keys you can simultaneously play.
+* Pressing keys in quick succession with the mouse sometimes causes some keys to become stuck in a pressed position.
 * Most audio mixers act strangely when many sounds are played simultaneously (around 10).
 * Some audio mixers (e.g. Pulse Audio) are known to have bugs concerning HTML5 audio as of this writing.
 
