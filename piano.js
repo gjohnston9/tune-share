@@ -114,7 +114,8 @@ My license:
 
 	$(document).ready(function() {
 			$("#toggle-display-button").click(function() {
-				$("#recording-container").slideToggle();
+				$("#recording-container").slideToggle(); // TODO: change all of these ids...
+				$(this).text( $(this).text() == "Hide recording/playback buttons" ? "Show recording/playback buttons" : "Hide recording/playback buttons");
 			});
 
 			$("#record-button").click(function() {
