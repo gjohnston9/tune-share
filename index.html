@@ -123,10 +123,18 @@ My license:
 			</div>
 		</div>
 
-		<script src="piano.js"></script>
 		<p style="text-align:center; font-size:smaller;">
 			source code: <a href="https://github.com/greg9381/js-piano" target="newwindow">here</a><br>
 			forked from: <a href="https://github.com/michaelmp/js-piano" target="newwindow">here</a>
 		</p>
+
+		<script src="https://www.gstatic.com/firebasejs/3.6.4/firebase.js"></script>
+		<script src="firebase_config.js"></script> <!-- create "config" variable with firebase config -->
+		<script>
+			// Initialize Firebase
+			firebase.initializeApp(config);
+			var database = firebase.database();
+		</script>
+		<script src="piano.js"></script>
 	</body>
 </html>
