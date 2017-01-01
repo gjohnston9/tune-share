@@ -34,7 +34,6 @@ My license:
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-var recorded_events = [];
 
 (function() {
 	/* Recording functionality */
@@ -42,7 +41,10 @@ var recorded_events = [];
 	var seconds_elapsed = 0;
 	var update_interval;
 
-	var test_string = "3.79.95_2.79.608_3.80.112_2.80.751_3.80.96_2.80.855_3.80.500_3.80.33_3.80.32_3.80.32_3.80.33_3.80.33_3.80.33_3.80.33_3.80.33_3.80.32_3.80.33_3.80.33_3.80.8_2.80.0";
+	var recorded_events = []; // keeps track of events while recording
+	var recorded_tune_string = ""; // holds string representing most recently recorded tune (updated only when "Stop recording" is pressed)
+
+	var url_tune_string = null; // if present, tune in url is parsed in $(document).ready below and assigned to this variable
 
 	function clock_update() {
 		var minutes, seconds;
@@ -59,11 +61,12 @@ var recorded_events = [];
 
 	function record_toggle() {
 		if (recording) { // stop recording
-			var tune_string = events_to_string(recorded_events);
-			document.getElementById("share-url").innerHTML = "The URL for your tune is " + window.location.href + "?" + $.param({"tune" : tune_string});
+			recorded_tune_string = events_to_string(recorded_events);
+			document.getElementById("share-url").innerHTML = "The URL for your tune is " + window.location.href + "?" + $.param({"tune" : recorded_tune_string});
 			$("#share-url").show();
 
 			document.getElementById("record-button").innerHTML = "Record";
+			document.getElementById("playback-button").disabled = false;
 			document.getElementById("clock").innerHTML = "0:00";
 			clearInterval(update_interval);
 			seconds_elapsed = 0;
@@ -71,6 +74,7 @@ var recorded_events = [];
 			recorded_events = [];
 			update_interval = setInterval(clock_update, 1000);
 			document.getElementById("record-button").innerHTML = "Stop Recording";
+			document.getElementById("playback-button").disabled = true;
 			$("#share-url").hide();
 		}
 		recording = !recording;
@@ -78,15 +82,12 @@ var recorded_events = [];
 
 	function play_note(event) {
 		if (event["type"] == "mousedown") {
-			console.log("triggering mousedown at piano key " + event["piano_key"]);
 			$(pianoClass(event["piano_key"])).mousedown();
 		}
 		else if (event["type"] == "mouseup") {
-			console.log("triggering mouseup at piano key " + event["piano_key"]);
 			$(pianoClass(event["piano_key"])).mouseup();
 		} else {
 			// keydown or keyup
-			console.log("triggering " + event["type"] + "; code is " + event["code"]);
 			var press = $.Event(event["type"]);
 			press.keyCode = event["code"];
 			press.which = event["code"];
@@ -99,14 +100,15 @@ var recorded_events = [];
 		var diff;
 		function play_one() {
 			if (index >= events_array.length) {
+				document.getElementById("playback-button").disabled = false;
 				return;
 			}
 			play_note(events_array[index]);
 			diff = events_array[index]["difference"];
-			console.log("waiting for " + diff + " milliseconds.");
 			index++;
 			setTimeout(play_one, diff);
 		}
+		document.getElementById("playback-button").disabled = true;
 		play_one();
 	}
 
@@ -120,10 +122,28 @@ var recorded_events = [];
 			});
 
 			$("#playback-button").click(function() {
-				var events = string_to_events(test_string); // test conversion from string to events
-				console.log(events);
+				var events = string_to_events(recorded_tune_string);
 				play_back_recursive(events);
 			})
+
+			$("#url-playback-button").click(function() {
+				var events = string_to_events(url_tune_string);
+				play_back_recursive(events);
+			})
+
+			document.getElementById("playback-button").disabled = true;
+
+			var regex = /tune=([\w\._]+)/;
+			var url_vars = window.location.search.substring(1);
+			console.log("url_vars: " + url_vars);
+			var match = url_vars.match(regex);
+			if (match != null) {
+				url_tune_string = match[1];
+				console.log("parsed tune string: " + url_tune_string);
+				document.getElementById("url-playback-button").disabled = false;
+			} else {
+				document.getElementById("url-playback-button").disabled = true;
+			}
 	});
 
 	/* Piano keyboard pitches. Names match sound files by ID attribute. */
@@ -291,14 +311,10 @@ var recorded_events = [];
 			sustaining = true;
 			$(pianoClass('pedal')).addClass('piano-sustain');
 		}
-		console.log("\n\ncaptured keydown event. event is:");
-		console.log(event);
 		press(keydown(event.which));
 	});
 	
 	$(document).keyup(function(event) {
-		console.log("\n\ncaptured keyup event. event is:");
-		console.log(event);
 		if (event.which === pedal) {
 			sustaining = false;
 			$(pianoClass('pedal')).removeClass('piano-sustain');
