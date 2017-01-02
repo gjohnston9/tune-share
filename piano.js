@@ -67,7 +67,8 @@ My license:
 	function record_toggle() {
 		if (recording) { // stop recording
 			recorded_tune_string = events_to_string(recorded_events);
-			document.getElementById("share-url").innerHTML = "The URL for your tune is " + window.location.href + "?" + $.param({"tune" : recorded_tune_string});
+      var link_text = window.location.href + "?" + $.param({"tune" : recorded_tune_string});
+			document.getElementById("share-url").innerHTML = "The URL for your tune is <a href='" + link_text + "' target='newwindow'>" + link_text + "</a>";
 			$("#share-url").show();
 
 			document.getElementById("record-button").innerHTML = "Record";
@@ -112,10 +113,10 @@ My license:
 		function play_one() {
 			if (index >= events_array.length) {
 				if (url_tune_string != null) {
-					document.getElementById("playback-url-button").disabled = false;
+					setTimeout(function() { document.getElementById("playback-url-button").disabled = false; }, 750);
 				}
 				if (recorded_tune_string != null) {
-					document.getElementById("playback-recorded-button").disabled = false;	
+					setTimeout(function() { document.getElementById("playback-recorded-button").disabled = false; }, 750);
 				}				
 				return;
 			}
@@ -125,10 +126,10 @@ My license:
 			setTimeout(play_one, diff);
 		}
 		if (url_tune_string != null) {
-			document.getElementById("playback-url-button").disabled = true;
+      document.getElementById("playback-url-button").disabled = true;
 		}
 		if (recorded_tune_string != null) {
-			document.getElementById("playback-recorded-button").disabled = true;	
+      document.getElementById("playback-recorded-button").disabled = true;
 		}
 		play_one();
 	}
