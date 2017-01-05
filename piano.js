@@ -36,9 +36,10 @@ My license:
 
 
 (function() {
-	// firebase.auth().signInAnonymously();
-	// var tunes = database.ref("tunes");
-	// tunes.push("push this value!");
+  console.log("doing firebase things")
+	firebase.auth().signInAnonymously();
+	var tunes = database.ref("tunes");
+	tunes.push("push this value!");
 
 	/* Recording functionality */
 	var recording = false;
