@@ -5,7 +5,7 @@ A simple Javascript piano, with the ability to record a tune and share it.
 
 Tunes are currently shared by creating a URL that directly encodes whichever tune was just recorded. In the future, a Firebase database will be used instead, so a short URL will be generated that corresponds to an entry in the database.
 
-available at https://greg9381.github.io/tune-share/
+available at https://tune-share.azurewebsites.net/
 
 Features:
 
