@@ -36,10 +36,6 @@ My license:
 
 
 (function() {
-  console.log("doing firebase things")
-	firebase.auth().signInAnonymously();
-	var tunes = database.ref("tunes");
-	tunes.push("push this value!");
 
 	/* Recording functionality */
 	var recording = false;
@@ -51,6 +47,8 @@ My license:
 
 	// if present, tune in url is parsed in $(document).ready below and assigned to this variable
 	var url_tune_string = null;
+
+	var tune_key_length = 12; // length of key used for tune_string lookup in database
 
 	function clock_update() {
 		var minutes, seconds;
@@ -68,9 +66,26 @@ My license:
 	function record_toggle() {
 		if (recording) { // stop recording
 			recorded_tune_string = events_to_string(recorded_events);
-      var link_text = window.location.href + "?" + $.param({"tune" : recorded_tune_string});
-			document.getElementById("share-url").innerHTML = "The URL for your tune is <a href='" + link_text + "' target='newwindow'>" + link_text + "</a>";
-			$("#share-url").show();
+
+			tune_id = make_id(tune_key_length);
+
+			var item_params = {
+				Item: {
+					tune_key: {S: tune_id},
+					tune_string: {S: recorded_tune_string}
+				}
+			};
+
+			tunes_table.putItem(item_params, function(err, data) {
+				if (err) {
+					document.getElementById("share-url").innerHTML = "error creating URL: " + err;
+				} else {
+					var link_text = window.location.href + "?" + $.param({"tune" : tune_id});
+					document.getElementById("share-url").innerHTML = "The URL for your tune is <a href='" + link_text + "' target='newwindow'>" + link_text + "</a>";
+				}
+
+				$("#share-url").show();
+			});
 
 			document.getElementById("record-button").innerHTML = "Record";
 			document.getElementById("playback-recorded-button").disabled = false;
@@ -84,6 +99,7 @@ My license:
 			document.getElementById("playback-recorded-button").disabled = true;
 			$("#share-url").hide();
 		}
+
 		recording = !recording;
 	}
 
@@ -156,19 +172,56 @@ My license:
 			})
 
 			document.getElementById("playback-recorded-button").disabled = true;
+			document.getElementById("playback-url-button").disabled = true;
 
-			var regex = /tune=([\w\._]+)/;
+			// parse tune key from URL
+
+			var re = new RegExp("tune=([a-zA-Z0-9]{" + tune_key_length + "})")
 			var url_vars = window.location.search.substring(1);
 			console.log("url_vars: " + url_vars);
-			var match = url_vars.match(regex);
+			var match = url_vars.match(re);
 			if (match != null) {
-				url_tune_string = match[1];
-				console.log("parsed tune string: " + url_tune_string);
-				document.getElementById("playback-url-button").disabled = false;
+				tune_key_match = match[1]
+				console.log("match: " + match);
+				console.log("tune_key_match: " + tune_key_match)
+
+				var key = {
+					Key: {
+						tune_key: {S: tune_key_match}
+					}
+				}
+
+				console.log("looking up key")
+				tunes_table.getItem(key, function(err, data) {
+					if (err) {
+						console.log("error getting key: " + err);
+					} else {
+						if ("Item" in data) {
+							console.log("data: ");
+							console.log(data);
+							url_tune_string = data["Item"]["tune_string"]["S"];
+							console.log("found url_tune_string"); // TODO: make some indication on the page
+							document.getElementById("playback-url-button").disabled = false;
+						} else {
+							console.log("couldn't find url_tune_string..."); // TODO: make some indication on the page
+						}
+					}
+				});
 			} else {
-				document.getElementById("playback-url-button").disabled = true;
+				console.log("could not parse tune key from URL")
 			}
 	});
+
+	function make_id(num_chars) {
+			var text = "";
+		    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+		    for (var i = 0; i < num_chars; i++) {
+		        text += possible.charAt(Math.floor(Math.random() * possible.length));
+		    }
+
+		    return text;
+	}
 
 	/* Piano keyboard pitches. Names match sound files by ID attribute. */
 	
