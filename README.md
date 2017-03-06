@@ -3,7 +3,7 @@ tune-share
 
 A simple Javascript piano, with the ability to record a tune and share it.
 
-Tunes are currently shared by creating a URL that directly encodes whichever tune was just recorded. In the future, a Firebase database will be used instead, so a short URL will be generated that corresponds to an entry in the database.
+After you record a tune, an encoding of the tune is stored in a DynamoDB instance, along with an associated key. Then, a short URL containing that key is generated - if you give this URL to someone else, they can visit the page and click "Play tune from URL" to play back the same tune that you recorded.
 
 available at https://github.gatech.edu/pages/gjohnston9/tune-share/
 
