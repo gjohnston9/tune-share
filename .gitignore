@@ -1,1 +1,8 @@
-firebase_config.js
+__pycache__/
+/venv/
+
+# pycharm
+/.idea/
+
+# flask
+/instance/
