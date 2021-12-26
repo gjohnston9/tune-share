@@ -68,47 +68,59 @@ My license:
 			recorded_tune_string = events_to_string(recorded_events);
 
 			tune_id = make_id(tune_key_length);
-			console.log("posting; tune_id=" + tune_id)
-			$.post("/", {
-			    id: tune_id,
-			    tune_string: recorded_tune_string,
+			console.log("posting; tune_id=" + tune_id);
+
+			$.ajax({
+			    type: "POST",
+			    url: "/",
+			    data: JSON.stringify({tune_string: recorded_tune_string}),
+			    contentType: 'application/json',
 			}).done( function(data) {
-			    console.log("data:")
-			    console.log(data)
+			    console.log("success!");
+			    var link_text =
+			        window.location.href + "?" + $.param({"tune": data.tune_id});
+                document.getElementById("share-url").innerHTML =
+                    "The URL for your tune is <a href='" + link_text +
+                    "' target='newwindow'>" + link_text + "</a>";
+				$("#share-url").show();
+
+                document.getElementById("record-button").innerHTML = "Record";
+                document.getElementById("playback-recorded-button").disabled = false;
+                document.getElementById("clock").innerHTML = "0:00";
+                clearInterval(update_interval);
+                seconds_elapsed = 0;
+                recording = false;
+			}).fail( function() {
+			    console.log("failure...");
+			}).always( function(data) {
+			    console.log(data);
 			})
 
-			var item_params = {
-				Item: {
-					tune_key: {S: tune_id},
-					tune_string: {S: recorded_tune_string}
-				}
-			};
-
-			tunes_table.putItem(item_params, function(err, data) {
-				if (err) {
-					document.getElementById("share-url").innerHTML = "error creating URL: " + err;
-				} else {
-					var link_text = window.location.href + "?" + $.param({"tune" : tune_id});
-					document.getElementById("share-url").innerHTML = "The URL for your tune is <a href='" + link_text + "' target='newwindow'>" + link_text + "</a>";
-				}
-
-				$("#share-url").show();
-			});
-
-			document.getElementById("record-button").innerHTML = "Record";
-			document.getElementById("playback-recorded-button").disabled = false;
-			document.getElementById("clock").innerHTML = "0:00";
-			clearInterval(update_interval);
-			seconds_elapsed = 0;
+//			var item_params = {
+//				Item: {
+//					tune_key: {S: tune_id},
+//					tune_string: {S: recorded_tune_string}
+//				}
+//			};
+//
+//			tunes_table.putItem(item_params, function(err, data) {
+//				if (err) {
+//					document.getElementById("share-url").innerHTML = "error creating URL: " + err;
+//				} else {
+//					var link_text = window.location.href + "?" + $.param({"tune" : tune_id});
+//					document.getElementById("share-url").innerHTML = "The URL for your tune is <a href='" + link_text + "' target='newwindow'>" + link_text + "</a>";
+//				}
+//
+//				$("#share-url").show();
+//			});
 		} else { // start recording
 			recorded_events = [];
 			update_interval = setInterval(clock_update, 1000);
 			document.getElementById("record-button").innerHTML = "Stop Recording";
 			document.getElementById("playback-recorded-button").disabled = true;
 			$("#share-url").hide();
+			recording = true;
 		}
-
-		recording = !recording;
 	}
 
 	function play_note(event) {

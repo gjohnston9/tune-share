@@ -1,5 +1,8 @@
 from flask import Blueprint, render_template, request
 
+from tuneshare.models.db import get_db
+from tuneshare.models.tune import create_tune
+
 tune_bp = Blueprint('tune', __name__)
 
 
@@ -10,7 +13,9 @@ def serve():
 
 @tune_bp.route('/', methods=['POST'])
 def store_tune():
-    # TODO: store in db
+    tune_string = request.json['tune_string']
+    db = get_db()
+    tune_id = create_tune(db, tune_string)
     return {
-        "tune_id": "xyz", # TODO: use id from db
+        'tune_id': tune_id,
     }
