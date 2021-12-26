@@ -5,6 +5,5 @@ CREATE TABLE tune (
       encoded_tune TEXT NOT NULL,
       created_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       last_accessed_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      access_count INTEGER NOT NULL
+      access_count INTEGER NOT NULL DEFAULT 0
 );
-
