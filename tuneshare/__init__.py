@@ -2,7 +2,7 @@ import os
 
 from flask import Flask
 
-from tuneshare import db
+from tuneshare.models import db
 from tuneshare.routes import tune_bp
 
 
