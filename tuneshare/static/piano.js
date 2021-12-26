@@ -68,6 +68,14 @@ My license:
 			recorded_tune_string = events_to_string(recorded_events);
 
 			tune_id = make_id(tune_key_length);
+			console.log("posting; tune_id=" + tune_id)
+			$.post("/", {
+			    id: tune_id,
+			    tune_string: recorded_tune_string,
+			}).done( function(data) {
+			    console.log("data:")
+			    console.log(data)
+			})
 
 			var item_params = {
 				Item: {
