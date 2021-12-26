@@ -3,7 +3,7 @@ import os
 from flask import Flask
 
 from tuneshare import db
-from tuneshare.tune import tune_bp
+from tuneshare.routes import tune_bp
 
 
 def create_app(test_config=None):
