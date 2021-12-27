@@ -1,0 +1,20 @@
+{
+  "name": "tune-share",
+  "version": "1.0.0",
+  "description": "A web app for sharing melodies. This package.json file only exists so I can use npm to install eslint.",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint '**/*.js'",
+    "lintfix": "npm run lint -- --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gjohnston9/tune-share.git"
+  },
+  "author": "Greg Johnston",
+  "license": "GPL-3.0+",
+  "bugs": {
+    "url": "https://github.com/gjohnston9/tune-share/issues"
+  },
+  "homepage": "https://github.com/gjohnston9/tune-share#readme"
+}
