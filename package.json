@@ -16,5 +16,10 @@
   "bugs": {
     "url": "https://github.com/gjohnston9/tune-share/issues"
   },
-  "homepage": "https://github.com/gjohnston9/tune-share#readme"
+  "homepage": "https://github.com/gjohnston9/tune-share#readme",
+  "devDependencies": {
+    "eslint": "^8.5.0",
+    "eslint-config-google": "^0.14.0",
+    "node": "^17.3.0"
+  }
 }

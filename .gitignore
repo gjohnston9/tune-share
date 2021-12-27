@@ -6,3 +6,6 @@ __pycache__/
 
 # flask
 /instance/
+
+# node
+/node_modules/
