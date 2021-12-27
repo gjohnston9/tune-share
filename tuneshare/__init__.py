@@ -6,7 +6,7 @@ from tuneshare.models import db
 from tuneshare.routes import tune_bp
 
 
-def create_app(test_config=None):
+def create_app(test_config=None) -> Flask:
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
