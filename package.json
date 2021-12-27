@@ -4,7 +4,7 @@
   "description": "A web app for sharing melodies. This package.json file only exists so I can use npm to install eslint.",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint '**/*.js'",
+    "lint": "eslint 'tuneshare/static/piano.js'",
     "lintfix": "npm run lint -- --fix"
   },
   "repository": {

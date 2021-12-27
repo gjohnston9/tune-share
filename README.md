@@ -30,23 +30,37 @@ $ nvm install node --lts
 $ npm install
 ```
 
+## Development
+### Frontend
+#### Linting
+The settings from `.eslintrc.json` will be used:
+```
+npm run lint
+```
 
-## Running the app
+### Backend
+#### Linting
+flake8 will pick up settings from `setup.cfg`:
+```
+flake8
+```
+#### Testing
+To run tests, from the root of the project, run `PYTHONPATH=. pytest`. Append `--capture=no` to see output as it is printed.
+
+
+### Running the app
 From the root of the project:
 ```
 # Set up environment variables
 export FLASK_APP=tuneshare
 export FLASK_ENV=development
 
-# Set up the database
+# Set up the database (this clears any existing data)
 flask init-db
 
 # Run the application
 flask run
 ```
-
-## Tests
-From the root of the project, run `PYTHONPATH=. pytest`. Append `--capture=no` to see output as it is printed.
 
 ## Piano details
 ### Features
