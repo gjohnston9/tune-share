@@ -37,25 +37,26 @@ My license:
 
 (function() {
 
-	/* Recording functionality */
+	// Recording functionality
 	var recording = false;
-	var seconds_elapsed = 0;
-	var update_interval;
+	var seconds_elapsed;
+	// Keeps track of events while recording
+	var recorded_events_array;
+	// Holds string representing most recently recorded tune
+	// (updated only when "Stop recording" is pressed)
+	var recorded_tune_string;
 
-	var recorded_events = []; // keeps track of events while recording
-	var recorded_tune_string = null; // holds string representing most recently recorded tune (updated only when "Stop recording" is pressed)
-
-	// if present, tune in url is parsed in $(document).ready below and assigned to this variable
-	var url_tune_string = null;
-
-	var tune_key_length = 12; // length of key used for tune_string lookup in database
+	// If present, tune in url is parsed in $(document).ready below and
+	// assigned to this variable
+	var url_tune_string;
+    // Length of key used for tune_string lookup in database
+	var tune_key_length = 12;
 
 	function clock_update() {
-		var minutes, seconds;
 		if (recording) {
 			seconds_elapsed++;
-			minutes = Math.floor(seconds_elapsed / 60);
-			seconds = seconds_elapsed % 60;
+			var minutes = Math.floor(seconds_elapsed / 60);
+			var seconds = seconds_elapsed % 60;
 			if (seconds < 10) {
 				seconds = "0" + seconds;
 			}
@@ -65,10 +66,8 @@ My license:
 
 	function record_toggle() {
 		if (recording) { // stop recording
-			recorded_tune_string = events_to_string(recorded_events);
-
-			tune_id = make_id(tune_key_length);
-			console.log("posting; tune_id=" + tune_id);
+			recorded_tune_string = events_to_string(recorded_events_array);
+			console.log("tune string: " + recorded_tune_string)
 
 			$.ajax({
 			    type: "POST",
@@ -96,13 +95,6 @@ My license:
 			    console.log(data);
 			})
 
-//			var item_params = {
-//				Item: {
-//					tune_key: {S: tune_id},
-//					tune_string: {S: recorded_tune_string}
-//				}
-//			};
-//
 //			tunes_table.putItem(item_params, function(err, data) {
 //				if (err) {
 //					document.getElementById("share-url").innerHTML = "error creating URL: " + err;
@@ -114,9 +106,10 @@ My license:
 //				$("#share-url").show();
 //			});
 		} else { // start recording
-			recorded_events = [];
+			recorded_events_array = [];
+			seconds_elapsed = 0;
 			update_interval = setInterval(clock_update, 1000);
-			document.getElementById("record-button").innerHTML = "Stop Recording";
+			document.getElementById("record-button").innerHTML = "Stop recording";
 			document.getElementById("playback-recorded-button").disabled = true;
 			$("#share-url").hide();
 			recording = true;
@@ -138,7 +131,7 @@ My license:
 		}
 	}
 
-	function play_back_recursive(events_array) {
+	function play_back_events(events_array) {
 		/* disable playback buttons, then
 		play back notes in events_array, then
 		enable playback buttons
@@ -150,11 +143,23 @@ My license:
 		function play_one() {
 			if (index >= events_array.length) {
 				if (url_tune_string != null) {
-					setTimeout(function() { document.getElementById("playback-url-button").disabled = false; }, 750);
+					setTimeout(
+					    function() {
+					        document.getElementById(
+					            "playback-url-button").disabled = false;
+                        },
+                        750,
+                    );
 				}
 				if (recorded_tune_string != null) {
-					setTimeout(function() { document.getElementById("playback-recorded-button").disabled = false; }, 750);
-				}				
+					setTimeout(
+					    function() {
+					        document.getElementById(
+					            "playback-recorded-button").disabled = false;
+                            },
+                            750,
+                        );
+				}
 				return;
 			}
 			play_note(events_array[index]);
@@ -163,10 +168,10 @@ My license:
 			setTimeout(play_one, diff);
 		}
 		if (url_tune_string != null) {
-      document.getElementById("playback-url-button").disabled = true;
+            document.getElementById("playback-url-button").disabled = true;
 		}
 		if (recorded_tune_string != null) {
-      document.getElementById("playback-recorded-button").disabled = true;
+		    document.getElementById("playback-recorded-button").disabled = true;
 		}
 		play_one();
 	}
@@ -174,7 +179,10 @@ My license:
 	$(document).ready(function() {
 			$("#toggle-display-button").click(function() {
 				$("#recording-playback-container").slideToggle();
-				$(this).text( $(this).text() == "Hide recording/playback buttons" ? "Show recording/playback buttons" : "Hide recording/playback buttons");
+				$(this).text(
+				    $(this).text() == "Hide recording/playback buttons" ?
+				        "Show recording/playback buttons" :
+				        "Hide recording/playback buttons");
 			});
 
 			$("#record-button").click(function() {
@@ -183,12 +191,12 @@ My license:
 
 			$("#playback-recorded-button").click(function() {
 				var events = string_to_events(recorded_tune_string);
-				play_back_recursive(events);
+				play_back_events(events);
 			})
 
 			$("#playback-url-button").click(function() {
 				var events = string_to_events(url_tune_string);
-				play_back_recursive(events);
+				play_back_events(events);
 			})
 
 			document.getElementById("playback-recorded-button").disabled = true;
@@ -444,7 +452,7 @@ My license:
 	keys.forEach(function(key) {
 		$(pianoClass(key)).on("mousedown mouseup", function(event) {
 			if (recording) {
-				recorded_events.push(
+				recorded_events_array.push(
 					{"timeStamp" : event.timeStamp,
 					"type" : event.type, // event.type is a string
 					"piano_key" : key}
@@ -457,7 +465,7 @@ My license:
 
 	$(document).on("keyup keydown", function(event) {
 		if (recording) {
-			recorded_events.push(
+			recorded_events_array.push(
 				{"timeStamp" : event.timeStamp,
 				"type" : event.type,
 				"code" : event.which}
