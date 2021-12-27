@@ -44,6 +44,9 @@ My license:
   // Holds string representing most recently recorded tune
   // (updated only when "Stop recording" is pressed)
   var recorded_tune_string;
+  // Interval that is created when recording starts, and cleared when
+  // recording stops.
+  var update_interval;
 
   // If present, tune in url is parsed in $(document).ready below and
   // assigned to this variable
@@ -118,7 +121,7 @@ My license:
       $(pianoClass(event['piano_key'])).mouseup();
     } else {
       // keydown or keyup
-      var press = $.Event(event['type']);
+      var press = $.Event(event['type']); // eslint-disable-line new-cap
       press.keyCode = event['code'];
       press.which = event['code'];
       $(document).trigger(press);
@@ -203,7 +206,7 @@ My license:
     console.log('url_vars: ' + url_vars);
     var match = url_vars.match(re);
     if (match != null) {
-      tune_key_match = match[1];
+      var tune_key_match = match[1];
       console.log('match: ' + match);
       console.log('tune_key_match: ' + tune_key_match);
 
@@ -214,6 +217,8 @@ My license:
       };
 
       console.log('looking up key');
+      // TODO: this doesn't work anymore, replace with a request to the backend
+      var tunes_table;
       tunes_table.getItem(key, function(err, data) {
         if (err) {
           console.log('error getting key: ' + err);
@@ -236,7 +241,8 @@ My license:
     }
   });
 
-  function make_id(num_chars) {
+  // TODO: use id from the backend
+  function make_id(num_chars) { // eslint-disable-line no-unused-vars
     var text = '';
     var possible =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -276,16 +282,16 @@ My license:
 
   function pianoClass(name) {
     return '.piano-' + name;
-  };
+  }
 
   function soundId(id) {
     return 'sound-' + id;
-  };
+  }
 
   function sound(id) {
     var it = document.getElementById(soundId(id));
     return it;
-  };
+  }
 
   /* Virtual piano keyboard events. */
 
@@ -296,11 +302,11 @@ My license:
       k = keys.indexOf(tonic) + offset;
       return keys[k];
     }
-  };
+  }
 
   function keydown(code) {
     return keyup(code);
-  };
+  }
 
   function press(key) {
     var audio = sound(key);
@@ -320,7 +326,7 @@ My license:
     $(pianoClass(key)).animate({
       'backgroundColor': '#88FFAA',
     }, 0);
-  };
+  }
 
   /* Manually diminish the volume when the key is not sustained. */
   /* These values are hand-selected for a pleasant fade-out quality. */
@@ -344,7 +350,7 @@ My license:
       clearInterval(intervals[key]);
       intervals[key] = setInterval(stepfade, 5);
     };
-  };
+  }
 
   /* Bring a key to an immediate halt. */
 
@@ -365,7 +371,7 @@ My license:
         }, 300, 'easeOutExpo');
       }
     };
-  };
+  }
 
   /* Simulate a gentle release, as opposed to hard stop. */
 
@@ -510,7 +516,7 @@ My license:
       if (i < events.length - 1) {
         string += '_';
       }
-    };
+    }
     return string;
   }
 
@@ -535,7 +541,7 @@ My license:
           'difference': parseInt(items[2], 10),
         });
       }
-    };
+    }
     return ret;
   }
 })();
