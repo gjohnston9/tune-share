@@ -1,36 +1,45 @@
 import datetime
 
+import pytest
 from flask import Flask
 from flask.testing import FlaskClient
 
 from tuneshare.models.db import get_db
-from tuneshare.models.tune import list_tunes, Tune
+from tuneshare.models.tune import list_tunes, NoSuchTuneException, Tune
 
 
-def test_create_tune_route(
+def test_create_tune(
     app: Flask,
     client: FlaskClient,
 ) -> None:
+    """Create a tune, check that it's in the database, retrieve it via API."""
     test_tune_string = 'test-tune-string'
-    response = client.post(
+    post_response = client.post(
         '/',
         json={'tune_string': test_tune_string}
     )
+    created_tune_id = post_response.json['tune_id']
     with app.app_context():
         db = get_db()
         results = list_tunes(db)
         assert len(results) == 1, results
         validate_new_tune(
             tune=results[0],
-            expected_id=response.json['tune_id'],
+            expected_id=created_tune_id,
             expected_encoded_tune=test_tune_string,
         )
+    get_response = client.get(
+        f'/api/tune/{created_tune_id}',
+    )
+    assert get_response.json['tune_id'] == created_tune_id
+    assert get_response.json['tune_string'] == test_tune_string
 
 
 def test_create_multiple_tunes(
     app: Flask,
     client: FlaskClient,
 ) -> None:
+    """Verify that creating two tunes in a row works as expected."""
     test_tune_string = 'test-tune-string'
     test_tune_string2 = 'test-tune-string2'
     for i, tune_string in enumerate([test_tune_string, test_tune_string2], 1):
@@ -64,3 +73,14 @@ def validate_new_tune(
     assert tune.access_count == 0
     time_since_creation = datetime.datetime.now() - tune.created_timestamp
     assert time_since_creation.total_seconds() < 1
+
+
+def test_get_nonexistent_tune(
+    app: Flask,
+    client: FlaskClient,
+) -> None:
+    """An exception should be raised when getting a tune that does not exist."""
+    with pytest.raises(NoSuchTuneException):
+        client.get(
+            '/api/tune/does_not_exist',
+        )
