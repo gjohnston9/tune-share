@@ -72,7 +72,7 @@ My license:
 
 			$.ajax({
 			    type: "POST",
-			    url: "/",
+			    url: "/api/tune",
 			    data: JSON.stringify({tune_string: recorded_tune_string}),
 			    contentType: 'application/json',
 			}).done( function(data) {

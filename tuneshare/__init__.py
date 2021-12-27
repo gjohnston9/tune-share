@@ -3,7 +3,7 @@ import os
 from flask import Flask
 
 from tuneshare.models import db
-from tuneshare.routes import tune_bp
+from tuneshare.routes import app_bp
 
 
 def create_app(test_config=None) -> Flask:
@@ -28,7 +28,7 @@ def create_app(test_config=None) -> Flask:
         pass
 
     db.init_app(app)
-    app.register_blueprint(tune_bp)
+    app.register_blueprint(app_bp)
 
     # a simple page that says hello
     @app.route('/hello')

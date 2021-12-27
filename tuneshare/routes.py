@@ -3,16 +3,16 @@ from flask import Blueprint, render_template, request
 from tuneshare.models.db import get_db
 from tuneshare.models.tune import create_tune, get_tune
 
-tune_bp = Blueprint('tune', __name__)
+app_bp = Blueprint('tune', __name__)
 
 
-@tune_bp.route('/', methods=['GET'])
+@app_bp.route('/', methods=['GET'])
 def serve():
     """Serve the html page."""
     return render_template('index.html')
 
 
-@tune_bp.route('/api/tune/<tune_id>', methods=['GET'])
+@app_bp.route('/api/tune/<tune_id>', methods=['GET'])
 def get_tune_by_id(tune_id: str):
     """Return the tune corresponding to the given id."""
     print(f'getting tune with id {tune_id}')
@@ -26,7 +26,7 @@ def get_tune_by_id(tune_id: str):
     }
 
 
-@tune_bp.route('/', methods=['POST'])
+@app_bp.route('/api/tune', methods=['POST'])
 def store_tune():
     """Save the given tune and return the generated id."""
     tune_string = request.json['tune_string']

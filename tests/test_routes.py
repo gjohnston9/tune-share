@@ -15,7 +15,7 @@ def test_create_tune(
     """Create a tune, check that it's in the database, retrieve it via API."""
     test_tune_string = 'test-tune-string'
     post_response = client.post(
-        '/',
+        '/api/tune',
         json={'tune_string': test_tune_string}
     )
     created_tune_id = post_response.json['tune_id']
@@ -44,7 +44,7 @@ def test_create_multiple_tunes(
     test_tune_string2 = 'test-tune-string2'
     for i, tune_string in enumerate([test_tune_string, test_tune_string2], 1):
         response = client.post(
-            '/',
+            '/api/tune',
             json={'tune_string': tune_string}
         )
         with app.app_context():
