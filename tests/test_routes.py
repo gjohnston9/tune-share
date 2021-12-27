@@ -79,7 +79,7 @@ def test_get_nonexistent_tune(
     app: Flask,
     client: FlaskClient,
 ) -> None:
-    """An exception should be raised when getting a tune that does not exist."""
+    """An exception should be raised when getting a tune that doesn't exist."""
     with pytest.raises(NoSuchTuneException):
         client.get(
             '/api/tune/does_not_exist',

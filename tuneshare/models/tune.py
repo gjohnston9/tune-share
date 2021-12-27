@@ -56,7 +56,7 @@ def create_tune(db: Connection, tune_string: str) -> str:
     return c.lastrowid
 
 
-def get_tune(db:Connection, tune_id: str) -> Tune:
+def get_tune(db: Connection, tune_id: str) -> Tune:
     """
     Fetches the tune with the given id from the database, and returns it.
 

@@ -32,8 +32,8 @@ def close_db(_e: Optional[BaseException] = None) -> None:
     """
     Close the application context's db.
 
-    :param _e: exception (unused) that will be passed during application context
-              teardown if there was an unhandled exception.
+    :param _e: exception (unused) that will be passed during application
+               context teardown if there was an unhandled exception.
     """
     db = g.pop('db', None)
     if db is not None:
