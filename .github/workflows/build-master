@@ -10,10 +10,8 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-
+  python-build:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
@@ -31,5 +29,14 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 --exit-zero --max-complexity=10 --max-line-length=127
     - name: Test with pytest
-      run: |
-        PYTHONPATH=. pytest
+      run: PYTHONPATH=. pytest
+
+  node-build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Node
+      uses: actions/setup-node@v2
+    - name Install dependencies
+      run: npm install
+    - name: Lint with eslint
+      run: npm run lint
