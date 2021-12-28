@@ -38,7 +38,6 @@ My license:
 (function() {
   // Recording functionality
   let recording = false;
-  let secondsElapsed;
   // Keeps track of events while recording
   let recordedEventsArray;
   // Holds string representing most recently recorded tune
@@ -46,7 +45,7 @@ My license:
   let recordedTuneString;
   // Interval that is created when recording starts, and cleared when
   // recording stops.
-  let updateInterval;
+  let clockUpdateInterval;
 
   // If present, tune in url is parsed in $(document).ready below and
   // assigned to this variable
@@ -55,19 +54,30 @@ My license:
   const tuneKeyLength = 12;
 
   /**
-   * Update the clock element.
-   * TODO: refactor this into a "startClock" function
+   * Start incrementing the time shown in the clock element every second.
    */
-  function clockUpdate() {
-    if (recording) {
+  function startClock() {
+    let secondsElapsed = 0;
+    /**
+     * Increment the seconds count, and update the clock.
+     */
+    function clockUpdate() {
       secondsElapsed++;
       const minutes = Math.floor(secondsElapsed / 60);
-      let seconds = secondsElapsed % 60;
-      if (seconds < 10) {
-        seconds = '0' + seconds;
-      }
-      document.getElementById('clock').innerHTML = minutes + ':' + seconds;
+      const seconds = secondsElapsed % 60;
+      const secondsString = String(seconds).padStart(2, '0');
+      document.getElementById('clock').innerHTML =
+        minutes + ':' + secondsString;
     }
+    clockUpdateInterval = setInterval(clockUpdate, 1000);
+  }
+
+  /**
+   * Stop the clock and reset it to 0.
+   */
+  function stopClock() {
+    clearInterval(clockUpdateInterval);
+    document.getElementById('clock').innerHTML = '0:00';
   }
 
   /**
@@ -98,9 +108,7 @@ My license:
 
         document.getElementById('record-button').innerHTML = 'Record';
         document.getElementById('playback-recorded-button').disabled = false;
-        document.getElementById('clock').innerHTML = '0:00';
-        clearInterval(updateInterval);
-        secondsElapsed = 0;
+        stopClock();
         recording = false;
       }).fail( function() {
         console.log('failure...');
@@ -116,11 +124,10 @@ My license:
       // });
     } else { // start recording
       recordedEventsArray = [];
-      secondsElapsed = 0;
-      updateInterval = setInterval(clockUpdate, 1000);
       document.getElementById('record-button').innerHTML = 'Stop recording';
       document.getElementById('playback-recorded-button').disabled = true;
       $('#share-url').hide();
+      startClock();
       recording = true;
     }
   }
