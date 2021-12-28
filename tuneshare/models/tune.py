@@ -10,6 +10,12 @@ CREATE_SQL = '''
     VALUES (?)
 '''
 
+INCREMENT_ACCESS_COUNT_SQL = '''
+    UPDATE tune
+    SET access_count = access_count + 1
+    WHERE id = ?
+'''
+
 SELECT_ONE_SQL = '''
     SELECT *
     FROM tune
@@ -33,6 +39,8 @@ class Tune:
     encoded_tune: str
     created_timestamp: datetime.datetime
     last_accessed_timestamp: datetime.datetime
+
+    # The number of times this record has been retrieved with `get_tune`
     access_count: int
 
     @staticmethod
@@ -70,7 +78,19 @@ def get_tune(db: Connection, tune_id: str) -> Tune:
     if len(results) > 1:
         # Should never happen, since id is the only key
         raise Exception(f'unexpected number of results: {len(results)}')
-    return Tune.from_db_row(results[0])
+
+    # Increment access count last to guard against any other errors (don't
+    # increment if there are somehow duplicate IDs, etc). This will cause it
+    # to lag by one, so we manually increment below before returning it.
+    # Even if we committed the update before retrieving the tune, it's possible
+    # to read the old access_count value when write-ahead logging is enabled in
+    # SQLite - this would lead to flaky tests.
+    c.execute(INCREMENT_ACCESS_COUNT_SQL, (int(tune_id),))
+    db.commit()
+    tune = Tune.from_db_row(results[0])
+    tune.access_count += 1
+
+    return tune
 
 
 def list_tunes(db: Connection) -> List[Tune]:

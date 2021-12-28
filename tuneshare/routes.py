@@ -19,11 +19,12 @@ def get_tune_by_id(tune_id: str):
     db = get_db()
     # TODO: return a 404 if not found, would be 500 right now
     t = get_tune(db, tune_id)
-    # TODO: increment access count and last-accessed-time
+    # TODO: update last-accessed-time
     # TODO: enable write-ahead-log so these updates don't lock the entire db
     return {
         'tune_id': tune_id,
         'tune_string': t.encoded_tune,
+        'access_count': t.access_count,
     }
 
 

@@ -1,5 +1,6 @@
 import os
 import tempfile
+from dataclasses import dataclass
 from typing import Generator
 
 import pytest
@@ -31,3 +32,22 @@ def app() -> Generator[Flask, None, None]:
 @pytest.fixture
 def client(app: Flask) -> FlaskClient:
     return app.test_client()
+
+
+@dataclass
+class CreatedTune:
+    tune_id: str
+    tune_string: str
+
+
+@pytest.fixture
+def created_tune(client: FlaskClient) -> CreatedTune:
+    tune_string = 'test-tune-string'
+    post_response = client.post(
+        '/api/tune',
+        json={'tune_string': tune_string}
+    )
+    return CreatedTune(
+        tune_id=post_response.json['tune_id'],
+        tune_string=tune_string,
+    )
