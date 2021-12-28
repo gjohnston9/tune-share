@@ -72,7 +72,9 @@ def validate_new_tune(
     assert tune.created_timestamp == tune.last_accessed_timestamp
     assert tune.access_count == 0
     time_since_creation = datetime.datetime.now() - tune.created_timestamp
-    assert time_since_creation.total_seconds() < 1
+    # This should really be ~0, but there seems to be some delay or clock shift
+    # when running on GitHub Actions - this was 1.001
+    assert time_since_creation.total_seconds() < 2
 
 
 def test_get_nonexistent_tune(
