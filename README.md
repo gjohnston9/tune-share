@@ -1,6 +1,6 @@
 # tune-share
 
-[![tune-share-master](https://github.com/gjohnston9/tune-share/actions/workflows/tune-share-master.yml/badge.svg?branch=master)](https://github.com/gjohnston9/tune-share/actions/workflows/tune-share-master.yml)
+[![tune-share-master](https://github.com/gjohnston9/tune-share/actions/workflows/build-master.yml/badge.svg?branch=master)](https://github.com/gjohnston9/tune-share/actions/workflows/build-master.yml)
 
 A Flask web app with a simple Javascript piano, with the ability to record a tune and share it.
 
