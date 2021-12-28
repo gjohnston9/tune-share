@@ -50,8 +50,6 @@ My license:
   // If present, tune in url is parsed in $(document).ready below and
   // assigned to this variable
   let urlTuneString;
-  // Length of key used for tune_string lookup in database
-  const tuneKeyLength = 12;
 
   /**
    * Start incrementing the time shown in the clock element every second.
@@ -231,63 +229,25 @@ My license:
 
     // parse tune key from URL
 
-    const re = new RegExp('tune=([a-zA-Z0-9]{' + tuneKeyLength + '})');
+    const re = new RegExp('tune=([a-zA-Z0-9]+)');
     const urlVars = window.location.search.substring(1);
-    console.log('urlVars: ' + urlVars);
     const match = urlVars.match(re);
     if (match != null) {
-      const tuneKeyMatch = match[1];
-      console.log('match: ' + match);
-      console.log('tuneKeyMatch: ' + tuneKeyMatch);
-
-      const key = {
-        Key: {
-          tune_key: {S: tuneKeyMatch},
-        },
-      };
-
-      console.log('looking up key');
-      // TODO: this doesn't work anymore, replace with a request to the backend
-      let tunesTable;
-      tunesTable.getItem(key, function(err, data) {
-        if (err) {
-          console.log('error getting key: ' + err);
-        } else {
-          if ('Item' in data) {
-            console.log('data: ');
-            console.log(data);
-            urlTuneString = data['Item']['tune_string']['S'];
-            // TODO: make some indication on the page
-            console.log('found urlTuneString');
-            document.getElementById('playback-url-button').disabled = false;
-          } else {
-            // TODO: make some indication on the page
-            console.log(`couldn't find urlTuneString...`);
-          }
-        }
+      const tuneId = match[1];
+      console.log('looking up tune with id: ' + tuneId);
+      $.ajax({
+        type: 'GET',
+        url: '/api/tune/' + tuneId,
+      }).done( function(data) {
+        urlTuneString = data.tune_string;
+        console.log('got encoded tune: ' + urlTuneString);
+        // TODO: make some indication on the page besides enabling this button
+        document.getElementById('playback-url-button').disabled = false;
+      }).fail( function(err) {
+        console.log('failure getting tune: ' + err);
       });
-    } else {
-      console.log('could not parse tune key from URL');
     }
   });
-
-  /**
-   * Make a random id with the given length.
-   * Unused.
-   * TODO: use id from the backend
-   *
-   * @param {number} numChars - Length of the id to make.
-   * @return {string} A random id with the given length.
-   */
-  function makeId(numChars) { // eslint-disable-line no-unused-vars
-    let text = '';
-    const possible =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < numChars; i++) {
-      text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
-  }
 
   /* Piano keyboard pitches. Names match sound files by ID attribute. */
 

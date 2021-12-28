@@ -35,5 +35,5 @@ def store_tune():
     tune_id = create_tune(db, tune_string)
     print(f'saved tune, id={tune_id}')
     return {
-        'tune_id': str(tune_id),
+        'tune_id': tune_id,
     }

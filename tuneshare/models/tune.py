@@ -53,7 +53,7 @@ def create_tune(db: Connection, tune_string: str) -> str:
     c = db.cursor()
     c.execute(CREATE_SQL, (tune_string,))
     db.commit()
-    return c.lastrowid
+    return str(c.lastrowid)
 
 
 def get_tune(db: Connection, tune_id: str) -> Tune:
