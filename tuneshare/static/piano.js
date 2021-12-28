@@ -38,27 +38,31 @@ My license:
 (function() {
   // Recording functionality
   let recording = false;
-  let seconds_elapsed;
+  let secondsElapsed;
   // Keeps track of events while recording
-  let recorded_events_array;
+  let recordedEventsArray;
   // Holds string representing most recently recorded tune
   // (updated only when "Stop recording" is pressed)
-  let recorded_tune_string;
+  let recordedTuneString;
   // Interval that is created when recording starts, and cleared when
   // recording stops.
-  let update_interval;
+  let updateInterval;
 
   // If present, tune in url is parsed in $(document).ready below and
   // assigned to this variable
-  let url_tune_string;
+  let urlTuneString;
   // Length of key used for tune_string lookup in database
-  const tune_key_length = 12;
+  const tuneKeyLength = 12;
 
-  function clock_update() {
+  /**
+   * Update the clock element.
+   * TODO: refactor this into a "startClock" function
+   */
+  function clockUpdate() {
     if (recording) {
-      seconds_elapsed++;
-      const minutes = Math.floor(seconds_elapsed / 60);
-      let seconds = seconds_elapsed % 60;
+      secondsElapsed++;
+      const minutes = Math.floor(secondsElapsed / 60);
+      let seconds = secondsElapsed % 60;
       if (seconds < 10) {
         seconds = '0' + seconds;
       }
@@ -66,30 +70,37 @@ My license:
     }
   }
 
-  function record_toggle() {
+  /**
+   * Toggle "recording" on or off.
+   * If this stops the recording, then send the recorded song to the backend,
+   * and use the returned id to display a link to the song.
+   * Otherwise, this starts the recording, setting "recording" to true so that
+   * events will be recorded.
+   */
+  function recordToggle() {
     if (recording) { // stop recording
-      recorded_tune_string = events_to_string(recorded_events_array);
-      console.log('tune string: ' + recorded_tune_string);
+      recordedTuneString = eventsToString(recordedEventsArray);
+      console.log('tune string: ' + recordedTuneString);
 
       $.ajax({
         type: 'POST',
         url: '/api/tune',
-        data: JSON.stringify({tune_string: recorded_tune_string}),
+        data: JSON.stringify({tune_string: recordedTuneString}),
         contentType: 'application/json',
       }).done( function(data) {
         console.log('success!');
-        const link_text =
+        const linkText =
           window.location.href + '?' + $.param({'tune': data.tune_id});
         document.getElementById('share-url').innerHTML =
-          `The URL for your tune is <a href='` + link_text +
-          `' target='newwindow'>` + link_text + '</a>';
+          `The URL for your tune is <a href='` + linkText +
+          `' target='newwindow'>` + linkText + '</a>';
         $('#share-url').show();
 
         document.getElementById('record-button').innerHTML = 'Record';
         document.getElementById('playback-recorded-button').disabled = false;
         document.getElementById('clock').innerHTML = '0:00';
-        clearInterval(update_interval);
-        seconds_elapsed = 0;
+        clearInterval(updateInterval);
+        secondsElapsed = 0;
         recording = false;
       }).fail( function() {
         console.log('failure...');
@@ -97,16 +108,16 @@ My license:
         console.log(data);
       });
 
-      // tunes_table.putItem(item_params, function(err, data) {
+      // tunesTable.putItem(item_params, function(err, data) {
       //   if (err) {
       //     document.getElementById('share-url').innerHTML =
       //       'error creating URL: ' + err;
       //   }
       // });
     } else { // start recording
-      recorded_events_array = [];
-      seconds_elapsed = 0;
-      update_interval = setInterval(clock_update, 1000);
+      recordedEventsArray = [];
+      secondsElapsed = 0;
+      updateInterval = setInterval(clockUpdate, 1000);
       document.getElementById('record-button').innerHTML = 'Stop recording';
       document.getElementById('playback-recorded-button').disabled = true;
       $('#share-url').hide();
@@ -114,7 +125,13 @@ My license:
     }
   }
 
-  function play_note(event) {
+  /**
+   * Play a note.
+   *
+   * @param {Object} event - An event corresponding to a single key press (down
+   *                         or up) or mouse click (down or up).
+   */
+  function playNote(event) {
     if (event['type'] == 'mousedown') {
       $(pianoClass(event['piano_key'])).mousedown();
     } else if (event['type'] == 'mouseup') {
@@ -128,18 +145,24 @@ My license:
     }
   }
 
-  function play_back_events(events_array) {
-    /* disable playback buttons, then
-    play back notes in events_array, then
-    enable playback buttons
-
-    (have to reenable from inside this function, because of how
-    setTimeout works) */
+  /**
+   * Given an array of events, play them back, reproducing a song.
+   *
+   * @param {Array<Object>} eventsArray - An array of events to be played back.
+   */
+  function playBackEvents(eventsArray) {
     let index = 0;
     let diff;
-    function play_one() {
-      if (index >= events_array.length) {
-        if (url_tune_string != null) {
+    /**
+     * Recursive helper function that plays back one event, then calls itself
+     * to play the next event after waiting for the time between the original
+     * two events.
+     */
+    function playOne() {
+      if (index >= eventsArray.length) {
+        // Reached the end of the events. Re-enable the playback buttons, after
+        // a short delay.
+        if (urlTuneString != null) {
           setTimeout(
               function() {
                 document.getElementById(
@@ -148,7 +171,7 @@ My license:
               750,
           );
         }
-        if (recorded_tune_string != null) {
+        if (recordedTuneString != null) {
           setTimeout(
               function() {
                 document.getElementById(
@@ -159,18 +182,18 @@ My license:
         }
         return;
       }
-      play_note(events_array[index]);
-      diff = events_array[index]['difference'];
+      playNote(eventsArray[index]);
+      diff = eventsArray[index]['difference'];
       index++;
-      setTimeout(play_one, diff);
+      setTimeout(playOne, diff);
     }
-    if (url_tune_string != null) {
+    if (urlTuneString != null) {
       document.getElementById('playback-url-button').disabled = true;
     }
-    if (recorded_tune_string != null) {
+    if (recordedTuneString != null) {
       document.getElementById('playback-recorded-button').disabled = true;
     }
-    play_one();
+    playOne();
   }
 
   $(document).ready(function() {
@@ -183,17 +206,17 @@ My license:
     });
 
     $('#record-button').click(function() {
-      record_toggle();
+      recordToggle();
     });
 
     $('#playback-recorded-button').click(function() {
-      const events = string_to_events(recorded_tune_string);
-      play_back_events(events);
+      const events = stringToEvents(recordedTuneString);
+      playBackEvents(events);
     });
 
     $('#playback-url-button').click(function() {
-      const events = string_to_events(url_tune_string);
-      play_back_events(events);
+      const events = stringToEvents(urlTuneString);
+      playBackEvents(events);
     });
 
     document.getElementById('playback-recorded-button').disabled = true;
@@ -201,38 +224,38 @@ My license:
 
     // parse tune key from URL
 
-    const re = new RegExp('tune=([a-zA-Z0-9]{' + tune_key_length + '})');
-    const url_vars = window.location.search.substring(1);
-    console.log('url_vars: ' + url_vars);
-    const match = url_vars.match(re);
+    const re = new RegExp('tune=([a-zA-Z0-9]{' + tuneKeyLength + '})');
+    const urlVars = window.location.search.substring(1);
+    console.log('urlVars: ' + urlVars);
+    const match = urlVars.match(re);
     if (match != null) {
-      const tune_key_match = match[1];
+      const tuneKeyMatch = match[1];
       console.log('match: ' + match);
-      console.log('tune_key_match: ' + tune_key_match);
+      console.log('tuneKeyMatch: ' + tuneKeyMatch);
 
       const key = {
         Key: {
-          tune_key: {S: tune_key_match},
+          tune_key: {S: tuneKeyMatch},
         },
       };
 
       console.log('looking up key');
       // TODO: this doesn't work anymore, replace with a request to the backend
-      let tunes_table;
-      tunes_table.getItem(key, function(err, data) {
+      let tunesTable;
+      tunesTable.getItem(key, function(err, data) {
         if (err) {
           console.log('error getting key: ' + err);
         } else {
           if ('Item' in data) {
             console.log('data: ');
             console.log(data);
-            url_tune_string = data['Item']['tune_string']['S'];
+            urlTuneString = data['Item']['tune_string']['S'];
             // TODO: make some indication on the page
-            console.log('found url_tune_string');
+            console.log('found urlTuneString');
             document.getElementById('playback-url-button').disabled = false;
           } else {
             // TODO: make some indication on the page
-            console.log(`couldn't find url_tune_string...`);
+            console.log(`couldn't find urlTuneString...`);
           }
         }
       });
@@ -241,12 +264,19 @@ My license:
     }
   });
 
-  // TODO: use id from the backend
-  function make_id(num_chars) { // eslint-disable-line no-unused-vars
+  /**
+   * Make a random id with the given length.
+   * Unused.
+   * TODO: use id from the backend
+   *
+   * @param {number} numChars - Length of the id to make.
+   * @return {string} A random id with the given length.
+   */
+  function makeId(numChars) { // eslint-disable-line no-unused-vars
     let text = '';
     const possible =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < num_chars; i++) {
+    for (let i = 0; i < numChars; i++) {
       text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
     return text;
@@ -280,34 +310,57 @@ My license:
 
   /* Selectors */
 
+  /**
+   * Return the class of the given key.
+   *
+   * @param {string} name - Name of the key.
+   * @return {string} The class of the key.
+   */
   function pianoClass(name) {
     return '.piano-' + name;
   }
 
-  function soundId(id) {
-    return 'sound-' + id;
-  }
-
+  /**
+   * Return the sound element with the given id.
+   *
+   * @param {string} id - Id of the sound.
+   * @return {HTMLElement} The DOM element for the sound.
+   */
   function sound(id) {
-    const it = document.getElementById(soundId(id));
-    return it;
+    return document.getElementById('sound-' + id);
   }
 
   /* Virtual piano keyboard events. */
 
+  /**
+   * Returns a key with the given code.
+   *
+   * @param {number} code - The code of a key.
+   * @return {number} The key with the given code.
+   */
   function keyup(code) {
     const offset = codes.indexOf(code);
-    let k;
     if (offset >= 0) {
-      k = keys.indexOf(tonic) + offset;
+      const k = keys.indexOf(tonic) + offset;
       return keys[k];
     }
   }
 
+  /**
+   * Returns a key with the given code.
+   *
+   * @param {number} code - The code of a key.
+   * @return {number} The key with the given code.
+   */
   function keydown(code) {
     return keyup(code);
   }
 
+  /**
+   * Handle a keypress.
+   *
+   * @param {string} key - The id of a key.
+   */
   function press(key) {
     const audio = sound(key);
     if (depressed[key]) {
@@ -328,9 +381,14 @@ My license:
     }, 0);
   }
 
-  /* Manually diminish the volume when the key is not sustained. */
-  /* These values are hand-selected for a pleasant fade-out quality. */
-
+  /**
+   * Manually diminish the volume when the key is not sustained.
+   * These values are hand-selected for a pleasant fade-out quality.
+   *
+   * @param {string} key - The id of a key.
+   * @return {function} A function that clears any interval set on the key,
+   *                    and then applies the interval from this function.
+   */
   function fade(key) {
     const audio = sound(key);
     const stepfade = function() {
@@ -352,8 +410,12 @@ My license:
     };
   }
 
-  /* Bring a key to an immediate halt. */
-
+  /**
+   * Bring a key to an immediate halt.
+   *
+   * @param {string} key - The id of a key.
+   * @return {function} A function that halts the key.
+   */
   function kill(key) {
     const audio = sound(key);
     return function() {
@@ -450,7 +512,7 @@ My license:
   keys.forEach(function(key) {
     $(pianoClass(key)).on('mousedown mouseup', function(event) {
       if (recording) {
-        recorded_events_array.push({
+        recordedEventsArray.push({
           'timeStamp': event.timeStamp,
           'type': event.type, // event.type is a string
           'piano_key': key,
@@ -463,7 +525,7 @@ My license:
 
   $(document).on('keyup keydown', function(event) {
     if (recording) {
-      recorded_events_array.push({
+      recordedEventsArray.push({
         'timeStamp': event.timeStamp,
         'type': event.type,
         'code': event.which,
@@ -474,45 +536,51 @@ My license:
 
   /* For converting recorded events to a string, or the other way around */
 
-  const event_type_to_num = {
+  const eventTypeToNum = {
     'mousedown': 0,
     'mouseup': 1,
     'keyup': 2,
     'keydown': 3,
   };
 
-  const num_to_event_type = {
+  const numToEventType = {
     0: 'mousedown',
     1: 'mouseup',
     2: 'keyup',
     3: 'keydown',
   };
 
-  function events_to_string(events) {
-    let single_event;
+  /**
+   * Convert an array of events to a string.
+   *
+   * @param {Array<Object>} events - The array of events to convert.
+   * @return {string} A string that encodes all the events.
+   */
+  function eventsToString(events) {
+    let singleEvent;
     let difference;
     let code;
-    let event_num;
+    let eventNum;
     let string = '';
 
     for (let i = 0; i < events.length; i++) {
-      single_event = events[i];
+      singleEvent = events[i];
       if (i == events.length - 1) {
         difference = 0;
       } else {
         difference =
-          Math.floor(events[i+1]['timeStamp'] - single_event['timeStamp']);
+          Math.floor(events[i+1]['timeStamp'] - singleEvent['timeStamp']);
       }
 
-      event_num = event_type_to_num[single_event['type']];
-      if (event_num < 2) {
+      eventNum = eventTypeToNum[singleEvent['type']];
+      if (eventNum < 2) {
         // mouseup/mousedown
-        code = single_event['piano_key'];
+        code = singleEvent['piano_key'];
       } else {
         // keyup/keydown
-        code = single_event['code'];
+        code = singleEvent['code'];
       }
-      string += [event_num, code, difference].join('.');
+      string += [eventNum, code, difference].join('.');
       if (i < events.length - 1) {
         string += '_';
       }
@@ -520,23 +588,29 @@ My license:
     return string;
   }
 
-  function string_to_events(events_string) {
+  /**
+   * Convert a string of encoded events into an array of events.
+   *
+   * @param {string} eventsString - A string encoding a series of events.
+   * @return {Array<Object>} An array of the events.
+   */
+  function stringToEvents(eventsString) {
     const ret = [];
     let items;
-    const events_split = events_string.split('_');
-    for (let i = 0; i < events_split.length; i++) {
-      items = events_split[i].split('.');
+    const eventsSplit = eventsString.split('_');
+    for (let i = 0; i < eventsSplit.length; i++) {
+      items = eventsSplit[i].split('.');
       if (items[0] < 2) {
         // mouseup/mousedown
         ret.push({
-          'type': num_to_event_type[items[0]],
+          'type': numToEventType[items[0]],
           'piano_key': items[1],
           'difference': items[2],
         });
       } else {
         // keydown/keyup
         ret.push({
-          'type': num_to_event_type[items[0]],
+          'type': numToEventType[items[0]],
           'code': parseInt(items[1], 10),
           'difference': parseInt(items[2], 10),
         });
