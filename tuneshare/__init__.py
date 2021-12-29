@@ -1,12 +1,25 @@
 import os
+from typing import Any, Mapping
 
-from flask import Flask
+from flask import Flask, redirect, request
 
 from tuneshare.models import db
 from tuneshare.routes import app_bp
 
 
-def create_app(test_config=None) -> Flask:
+def create_app(
+    test_config: Mapping[str, Any] = None,
+    prod_mode: bool = False,
+) -> Flask:
+    """
+    Create and configure the app.
+
+    :param test_config: Configuration to use for testing.
+    :param prod_mode: Set to True when running on prod. Divergence between dev
+                      and prod should be kept to a minimum. Right now it is
+                      only used to generate a self-signed cert in dev mode.
+    :return: The app, ready to run.
+    """
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
@@ -27,7 +40,15 @@ def create_app(test_config=None) -> Flask:
     except OSError:
         pass
 
+    if prod_mode:
+        app.before_request(force_https)
+
     db.init_app(app)
     app.register_blueprint(app_bp)
 
     return app
+
+
+def force_https():
+    if not request.is_secure:
+        return redirect(request.url.replace('http://', 'https://', 1))

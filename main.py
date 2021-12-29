@@ -6,4 +6,4 @@ Not used for local development.
 
 from tuneshare import create_app
 
-app = create_app()
+app = create_app(prod_mode=True)
