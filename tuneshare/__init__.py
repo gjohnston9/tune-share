@@ -1,3 +1,4 @@
+import datetime
 import os
 from typing import Any, Mapping, Optional
 
@@ -40,6 +41,9 @@ def create_app(
         os.makedirs(app.instance_path)
     except OSError:
         pass
+
+    # Set the cache-control max age for static files.
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = datetime.timedelta(hours=6)
 
     if prod_mode:
         app.before_request(force_https)
