@@ -1,6 +1,6 @@
 import sqlite3
 from sqlite3 import Connection
-from typing import Optional
+from typing import Optional, cast
 
 import click
 from flask import Flask, current_app, g
@@ -14,8 +14,9 @@ def init_app(app: Flask) -> None:
 
 def init_db() -> None:
     db = get_db()
-    with current_app.open_resource('schema.sql') as f:
-        db.executescript(f.read().decode('utf8'))
+    with current_app.open_resource('schema.sql', mode='rb') as f:
+        sql_string = f.read().decode('utf8')  # type: ignore
+        db.executescript(sql_string)
 
 
 def get_db() -> Connection:
@@ -25,7 +26,7 @@ def get_db() -> Connection:
             detect_types=sqlite3.PARSE_DECLTYPES
         )
         g.db.row_factory = sqlite3.Row
-    return g.db
+    return cast(Connection, g.db)
 
 
 def close_db(_e: Optional[BaseException] = None) -> None:

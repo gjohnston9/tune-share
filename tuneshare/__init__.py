@@ -1,7 +1,8 @@
 import os
-from typing import Any, Mapping
+from typing import Any, Mapping, Optional
 
 from flask import Flask, redirect, request
+from werkzeug import Response
 
 from tuneshare.models import db
 from tuneshare.routes import app_bp
@@ -49,6 +50,7 @@ def create_app(
     return app
 
 
-def force_https():
+def force_https() -> Optional[Response]:
     if not request.is_secure:
         return redirect(request.url.replace('http://', 'https://', 1))
+    return None  # https://github.com/python/mypy/issues/3974

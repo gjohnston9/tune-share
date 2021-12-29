@@ -71,8 +71,7 @@ def get_tune(db: Connection, tune_id: str) -> Tune:
     Throws a NoSuchTuneException if no tune exists with the id.
     """
     c = db.cursor()
-    results = c.execute(SELECT_ONE_SQL, (tune_id,))
-    results = list(results)
+    results = c.execute(SELECT_ONE_SQL, (tune_id,)).fetchall()
     if len(results) == 0:
         raise NoSuchTuneException
     if len(results) > 1:

@@ -1,3 +1,5 @@
+from typing import Any, Mapping
+
 from flask import Blueprint, render_template, request
 
 from tuneshare.models.db import get_db
@@ -6,14 +8,14 @@ from tuneshare.models.tune import create_tune, get_tune
 app_bp = Blueprint('tune', __name__)
 
 
-@app_bp.route('/', methods=['GET'])
-def serve():
+@app_bp.get('/')
+def serve() -> str:
     """Serve the html page."""
     return render_template('index.html')
 
 
-@app_bp.route('/api/tune/<tune_id>', methods=['GET'])
-def get_tune_by_id(tune_id: str):
+@app_bp.get('/api/tune/<tune_id>')
+def get_tune_by_id(tune_id: str) -> Mapping[str, Any]:
     """Return the tune corresponding to the given id."""
     print(f'getting tune with id {tune_id}')
     db = get_db()
@@ -28,9 +30,10 @@ def get_tune_by_id(tune_id: str):
     }
 
 
-@app_bp.route('/api/tune', methods=['POST'])
-def store_tune():
+@app_bp.post('/api/tune')
+def store_tune() -> Mapping[str, Any]:
     """Save the given tune and return the generated id."""
+    assert request.json is not None, request.data
     tune_string = request.json['tune_string']
     db = get_db()
     tune_id = create_tune(db, tune_string)
