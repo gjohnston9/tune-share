@@ -192,12 +192,8 @@ My license:
       index++;
       setTimeout(playOne, diff);
     }
-    if (urlTuneString != null) {
-      document.getElementById('playback-url-button').disabled = true;
-    }
-    if (recordedTuneString != null) {
-      document.getElementById('playback-recorded-button').disabled = true;
-    }
+    document.getElementById('playback-url-button').disabled = true;
+    document.getElementById('playback-recorded-button').disabled = true;
     playOne();
   }
 
@@ -223,9 +219,6 @@ My license:
       const events = stringToEvents(urlTuneString);
       playBackEvents(events);
     });
-
-    document.getElementById('playback-recorded-button').disabled = true;
-    document.getElementById('playback-url-button').disabled = true;
 
     // parse tune key from URL
 
