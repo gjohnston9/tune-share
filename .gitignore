@@ -1,16 +1,21 @@
-# python
+# Python
 __pycache__/
 /venv/
 
-# pycharm
+# PyCharm
 /.idea/
 
-# flask
+# Flask
 /instance/
 
-# node
+# Node
 /node_modules/
 
-# misc
-## vim swap files
-*.sw[p-a]
+# Terraform
+/.terraform/
+/*.tfstate*
+/*.tfvars
+
+# Misc
+## Vim swap files
+*.sw[a-p]
