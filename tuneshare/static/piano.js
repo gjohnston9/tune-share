@@ -113,13 +113,6 @@ My license:
       }).always( function(data) {
         console.log(data);
       });
-
-      // tunesTable.putItem(item_params, function(err, data) {
-      //   if (err) {
-      //     document.getElementById('share-url').innerHTML =
-      //       'error creating URL: ' + err;
-      //   }
-      // });
     } else { // start recording
       recordedEventsArray = [];
       document.getElementById('record-button').innerHTML = 'Stop recording';
@@ -237,6 +230,7 @@ My license:
         // TODO: make some indication on the page besides enabling this button
         document.getElementById('playback-url-button').disabled = false;
       }).fail( function(err) {
+        // TODO: make some indication on the page
         console.log('failure getting tune: ' + err);
       });
     }
