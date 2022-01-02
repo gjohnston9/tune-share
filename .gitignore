@@ -11,6 +11,14 @@ __pycache__/
 # Node
 /node_modules/
 
+# Firebase
+## Downloaded binary
+/firebase
+## From Firestore emulator
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
 # Terraform
 /.terraform/
 /*.tfstate*

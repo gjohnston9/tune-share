@@ -1,11 +1,10 @@
 import datetime
-import os
 from typing import Any, Mapping, Optional
 
 from flask import Flask, redirect, request
 from werkzeug import Response
 
-from tuneshare.models import db
+from tuneshare.models import firestore
 from tuneshare.routes import app_bp
 
 
@@ -22,33 +21,19 @@ def create_app(
                       only used to generate a self-signed cert in dev mode.
     :return: The app, ready to run.
     """
-    # create and configure the app
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(__name__)
     app.config.from_mapping(
-        SECRET_KEY='dev',
-        DATABASE=os.path.join(app.instance_path, 'tuneshare.sqlite'),
+        # Set the cache-control max age for static files
+        SEND_FILE_MAX_AGE_DEFAULT=datetime.timedelta(hours=6),
     )
 
-    if test_config is None:
-        # load the instance config, if it exists, when not testing
-        app.config.from_pyfile('config.py', silent=True)
-    else:
-        # load the test config if passed in
+    if test_config is not None:
         app.config.from_mapping(test_config)
-
-    # ensure the instance folder exists
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
-
-    # Set the cache-control max age for static files.
-    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = datetime.timedelta(hours=6)
 
     if prod_mode:
         app.before_request(force_https)
 
-    db.init_app(app)
+    firestore.init_app(app, prod_mode=prod_mode)
     app.register_blueprint(app_bp)
 
     return app

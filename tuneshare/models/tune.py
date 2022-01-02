@@ -1,36 +1,12 @@
 import datetime
-import sqlite3
+import random
 from dataclasses import dataclass
-from sqlite3 import Connection
-from typing import List
 
-CREATE_SQL = '''
-    INSERT INTO tune
-    (encoded_tune)
-    VALUES (?)
-'''
+from google.cloud.firestore_v1 import Client, DocumentSnapshot
 
-INCREMENT_ACCESS_COUNT_SQL = '''
-    UPDATE tune
-    SET access_count = access_count + 1
-    WHERE id = ?
-'''
-
-SELECT_ONE_SQL = '''
-    SELECT *
-    FROM tune
-    WHERE id = ?
-'''
-
-SELECT_ALL_SQL = '''
-    SELECT *
-    FROM tune
-    ORDER BY created_timestamp ASC
-'''
-
-
-class NoSuchTuneException(Exception):
-    pass
+_TUNE_COLLECTION = 'tune'
+_ID_LENGTH = 10
+_ID_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
 
 @dataclass
@@ -38,62 +14,40 @@ class Tune:
     tune_id: str
     encoded_tune: str
     created_timestamp: datetime.datetime
-    last_accessed_timestamp: datetime.datetime
-
-    # The number of times this record has been retrieved with `get_tune`
-    access_count: int
 
     @staticmethod
-    def from_db_row(row: sqlite3.Row) -> 'Tune':
+    def from_firestore_doc(doc: DocumentSnapshot) -> 'Tune':
+        """Create a Tune from a Firestore document snapshot."""
         return Tune(
-            # TODO: the "tune id" should be a string based on the number id
-            #  from the db
-            tune_id=str(row['id']),
-            encoded_tune=row['encoded_tune'],
-            created_timestamp=row['created_timestamp'],
-            last_accessed_timestamp=row['last_accessed_timestamp'],
-            access_count=row['access_count'],
+            tune_id=doc.id,
+            encoded_tune=doc.get('encoded_tune'),
+            created_timestamp=doc.create_time,
         )
 
 
-def create_tune(db: Connection, tune_string: str) -> str:
-    """Persist a new tune with the given string. Return the id."""
-    c = db.cursor()
-    c.execute(CREATE_SQL, (tune_string,))
-    db.commit()
-    return str(c.lastrowid)
+class NoSuchTuneException(Exception):
+    pass
 
 
-def get_tune(db: Connection, tune_id: str) -> Tune:
-    """
-    Fetches the tune with the given id from the database, and returns it.
+def _random_id() -> str:
+    return "".join(random.choice(_ID_CHARS) for _ in range(_ID_LENGTH))
 
-    Throws a NoSuchTuneException if no tune exists with the id.
-    """
-    c = db.cursor()
-    results = c.execute(SELECT_ONE_SQL, (tune_id,)).fetchall()
-    if len(results) == 0:
+
+def create_tune(firestore_client: Client, tune_string: str) -> str:
+    collection = firestore_client.collection(_TUNE_COLLECTION)
+    doc_id = _random_id()
+    _, doc_ref = collection.add(
+        document_id=doc_id,
+        document_data={
+            'encoded_tune': tune_string,
+        },
+    )
+    return doc_id
+
+
+def get_tune(firestore_client: Client, tune_id: str) -> Tune:
+    collection = firestore_client.collection(_TUNE_COLLECTION)
+    doc_snapshot = collection.document(document_id=tune_id).get()
+    if not doc_snapshot.exists:
         raise NoSuchTuneException
-    if len(results) > 1:
-        # Should never happen, since id is the only key
-        raise Exception(f'unexpected number of results: {len(results)}')
-
-    # Increment access count last to guard against any other errors (don't
-    # increment if there are somehow duplicate IDs, etc). This will cause it
-    # to lag by one, so we manually increment below before returning it.
-    # Even if we committed the update before retrieving the tune, it's possible
-    # to read the old access_count value when write-ahead logging is enabled in
-    # SQLite - this would lead to flaky tests.
-    c.execute(INCREMENT_ACCESS_COUNT_SQL, (int(tune_id),))
-    db.commit()
-    tune = Tune.from_db_row(results[0])
-    tune.access_count += 1
-
-    return tune
-
-
-def list_tunes(db: Connection) -> List[Tune]:
-    """List all tunes in the database, in ascending order of creation time."""
-    c = db.cursor()
-    results = c.execute(SELECT_ALL_SQL)
-    return [Tune.from_db_row(row) for row in results]
+    return Tune.from_firestore_doc(doc_snapshot)

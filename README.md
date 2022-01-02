@@ -9,38 +9,47 @@ After you record a tune, an encoding of the tune is stored in a database, along 
 ## Setup
 All of these steps should be run from the root of the project.
 ### Frontend
-For working on the frontend:
+Setup for working on the frontend:
 ```
 # Install node, if you don't have it already (from https://askubuntu.com/a/1009527)
-$ sudo apt purge nodejs npm
-$ curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
-$ nvm install node --lts
+sudo apt purge nodejs npm
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
+nvm install node --lts
 
 # Install the dependencies of this project (note that this includes a recent version of node; you might want to exclude it if you're happy with your version of node already)
-$ npm install
+npm install
 ```
 
 ### Backend
-For running the app or working on the backend:
+Setup for running the app or working on the backend:
 ```
 # Create a Python virtual environment, installed in the "venv" directory
-$ python3.8 -m venv venv/
+python3.8 -m venv venv/
 
 # Activate the venv
-$ source venv/bin/activate
+source venv/bin/activate
 
 # Install the packages needed for this project
-$ pip install -r requirements.txt
+pip install -r requirements.txt
+
+# Download the Firebase binary, for running Firestore emulator for local development/tests
+wget -O firebase https://github.com/firebase/firebase-tools/releases/download/v10.0.1/firebase-tools-linux
+chmod +x firebase
+./firebase setup:emulators:firestore
 ```
 
 ### Deployment
-For deploying to Google Cloud:
+Setup for deploying to Google Cloud:
+
+Install the Google Cloud SDK: https://cloud.google.com/sdk/docs/install
+
+Install Terraform: https://learn.hashicorp.com/tutorials/terraform/install-cli
+
+Then run these commands:
 ```
-# Install the Google Cloud SDK: https://cloud.google.com/sdk/docs/install
-# Install Terraform: https://learn.hashicorp.com/tutorials/terraform/install-cli
-$ gcloud components install app-engine-python
-$ gcloud auth application-default login
-$ terraform init
+gcloud components install app-engine-python
+gcloud auth application-default login
+terraform init
 ```
 
 ## Development
@@ -58,7 +67,13 @@ flake8 will pick up settings from `setup.cfg`:
 flake8
 ```
 #### Testing
-To run tests, from the root of the project, run `PYTHONPATH=. pytest`. Append `--capture=no` to see output as it is printed.
+To run tests, from the root of the project:
+```
+# Start the Firestore emulator (run in another terminal window)
+./firebase emulators:start --only firestore --project dev
+
+PYTHONPATH=. pytest
+```
 
 
 ### Running the app
@@ -68,8 +83,8 @@ From the root of the project:
 export FLASK_APP=tuneshare
 export FLASK_ENV=development
 
-# Set up the database (this clears any existing data)
-flask init-db
+# Start the Firestore emulator (run in another terminal window)
+./firebase emulators:start --only firestore --project dev
 
 # Run the application
 flask run
@@ -80,11 +95,11 @@ flask run
 # Create the GCP project etc. Note that if you have already created some of
 # these resources in the UI, you will need to import them with Terraform, e.g.
 # `terraform import google_project.tune_share_project <id-of-project>`.
-$ terraform plan   # preview changes
-$ terraform apply  # make changes
+terraform plan   # preview changes
+terraform apply  # make changes
 
-$ gcloud app deploy
-$ gcloud app browse  # open the running app in your browser
+gcloud app deploy
+gcloud app browse  # open the running app in your browser
 ```
 
 ## Piano details

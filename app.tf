@@ -13,4 +13,5 @@ resource "google_project" "tune_share_project" {
 resource "google_app_engine_application" "tune_share_app" {
   project     = google_project.tune_share_project.project_id
   location_id = "us-central"
+  database_type = "CLOUD_FIRESTORE"
 }
