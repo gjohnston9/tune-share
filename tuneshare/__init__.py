@@ -4,6 +4,7 @@ from typing import Any, Mapping, Optional
 from flask import Flask, redirect, request
 from werkzeug import Response
 
+from tuneshare.constants import PROD_MODE_KEY
 from tuneshare.models import firestore
 from tuneshare.routes import app_bp
 
@@ -22,10 +23,11 @@ def create_app(
     :return: The app, ready to run.
     """
     app = Flask(__name__)
-    app.config.from_mapping(
+    app.config.from_mapping({
+        PROD_MODE_KEY: prod_mode,
         # Set the cache-control max age for static files
-        SEND_FILE_MAX_AGE_DEFAULT=datetime.timedelta(hours=6),
-    )
+        'SEND_FILE_MAX_AGE_DEFAULT': datetime.timedelta(hours=6),
+    })
 
     if test_config is not None:
         app.config.from_mapping(test_config)

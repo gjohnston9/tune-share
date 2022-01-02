@@ -3,18 +3,24 @@ from typing import cast, Optional
 
 import firebase_admin  # type: ignore
 import firebase_admin.firestore  # type: ignore
-from flask import g, Flask
-from google.cloud.firestore_v1 import Client
+from flask import g, Flask, current_app
+from google.auth import credentials  # type: ignore
+from google.cloud.firestore_v1 import Client  # type: ignore
+
+from tuneshare import PROD_MODE_KEY
 
 _FIRESTORE_CLIENT = 'firestore_client'
 
 
 def init_app(app: Flask, prod_mode: bool = False) -> None:
+    firebase_options = None
     if not prod_mode:
         os.environ['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080'
-        os.environ['GOOGLE_CLOUD_PROJECT'] = 'dev'
+        firebase_options = {'projectId': 'dev'}
 
-    firebase_app = firebase_admin.initialize_app()
+    firebase_app = firebase_admin.initialize_app(
+        options=firebase_options,
+    )
     print(
         "initialized firebase app with "
         f"name={firebase_app.name}, project_id={firebase_app.project_id}")
@@ -23,7 +29,15 @@ def init_app(app: Flask, prod_mode: bool = False) -> None:
 
 def get_firestore_client() -> Client:
     if _FIRESTORE_CLIENT not in g:
-        setattr(g, _FIRESTORE_CLIENT, firebase_admin.firestore.client())
+        kwargs = {}
+        # There doesn't seem to be any way to specify anonymous credentials
+        # when initializing the firebase app above. So prod_mode needs to be
+        # checked when creating the Firestore client.
+        if not current_app.config.get(PROD_MODE_KEY):
+            kwargs['project'] = 'dev'
+            kwargs['credentials'] = credentials.AnonymousCredentials()
+        client = Client(**kwargs)
+        setattr(g, _FIRESTORE_CLIENT, client)
     return cast(Client, g.get(_FIRESTORE_CLIENT))
 
 
