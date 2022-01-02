@@ -1,5 +1,4 @@
-# Runs two jobs in parallel for every push or pull_request to master.
-# One job runs Python lint and tests. The other job runs lint on the project's JavaScript files.
+# Run lint/test jobs in parallel for every push or pull_request to master.
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
 name: build-master
@@ -10,19 +9,19 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  PYTHON_VERSION: 3.8
 jobs:
-  python-build:
+  python-lint:
     runs-on: ubuntu-latest
-    env:
-      FIREBASE_BINARY_VERSION: v10.0.1
     steps:
     - name: Check out repository
       uses: actions/checkout@v2
 
-    - name: Set up Python 3.8
+    - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: "3.8"
+        python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Cache ~/.cache/pip
       uses: actions/cache@v2
@@ -45,7 +44,34 @@ jobs:
         flake8 --exit-zero --max-complexity=10 --max-line-length=127
 
     - name: Run mypy type checker
+      # Uses settings from setup.cfg
       run: mypy
+
+  python-unit:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_BINARY_VERSION: v10.0.1
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache ~/.cache/pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
     - name: Cache Firebase files
       id: cache-firebase
@@ -70,7 +96,7 @@ jobs:
     - name: Test with pytest
       run: PYTHONPATH=. pytest
 
-  node-build:
+  js-lint:
     runs-on: ubuntu-latest
     steps:
     - name: Check out repository
