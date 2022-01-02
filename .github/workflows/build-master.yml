@@ -13,6 +13,8 @@ on:
 jobs:
   python-build:
     runs-on: ubuntu-latest
+    env:
+      FIREBASE_BINARY_VERSION: v10.0.1
     steps:
     - name: Check out repository
       uses: actions/checkout@v2
@@ -44,6 +46,26 @@ jobs:
 
     - name: Run mypy type checker
       run: mypy
+
+    - name: Cache Firebase files
+      id: cache-firebase
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/firebase
+          ~/.cache/firebase
+        key: ${{ runner.os }}-firebase-${{ env.FIREBASE_BINARY_VERSION }}
+
+    - name: Download Firebase binary
+      if: steps.cache-firebase.outputs.cache-hit != 'true'
+      run: |
+        wget -O ~/firebase https://github.com/firebase/firebase-tools/releases/download/${{ env.FIREBASE_BINARY_VERSION }}/firebase-tools-linux
+        chmod +x ~/firebase
+
+    - name: Run Firestore emulator in background
+      # Sleep after starting the emulator so that it has a chance to start up
+      # and print some info.
+      run: ~/firebase emulators:start --only firestore --project dev & sleep 4
 
     - name: Test with pytest
       run: PYTHONPATH=. pytest
