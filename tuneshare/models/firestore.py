@@ -33,7 +33,7 @@ def get_firestore_client() -> Client:
         # There doesn't seem to be any way to specify anonymous credentials
         # when initializing the firebase app above. So prod_mode needs to be
         # checked when creating the Firestore client.
-        if not current_app.config.get(PROD_MODE_KEY):
+        if not current_app.config[PROD_MODE_KEY]:
             kwargs['project'] = 'dev'
             kwargs['credentials'] = credentials.AnonymousCredentials()
         client = Client(**kwargs)

@@ -5,6 +5,7 @@ from flask import Flask
 from flask.testing import FlaskClient
 from werkzeug.wrappers.response import Response
 
+from tuneshare import PROD_MODE_KEY
 from tuneshare.models.tune import NoSuchTuneException
 
 
@@ -47,10 +48,13 @@ def validate_new_tune(
     assert time_since_creation.total_seconds() < 0.5
 
 
-def test_get_nonexistent_tune(
-    app: Flask,
-    client: FlaskClient,
-) -> None:
+def test_get_nonexistent_tune(app: Flask, client: FlaskClient) -> None:
     """An exception should be raised when getting a tune that doesn't exist."""
     with pytest.raises(NoSuchTuneException):
         client.get('/api/tune/does_not_exist')
+
+
+def test_prod_mode(app: Flask) -> None:
+    assert PROD_MODE_KEY in app.config
+    assert app.config.get(PROD_MODE_KEY) is False
+    assert app.config[PROD_MODE_KEY] is False

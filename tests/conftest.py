@@ -12,9 +12,11 @@ from tuneshare.models.tune import _TUNE_COLLECTION
 
 @pytest.fixture
 def app() -> Generator[Flask, None, None]:
-    app = create_app({
-        'TESTING': True,
-    })
+    app = create_app(
+        test_config={
+            'TESTING': True
+        },
+    )
     yield app
 
     with app.app_context():
@@ -24,9 +26,9 @@ def app() -> Generator[Flask, None, None]:
         for doc in c.stream():
             doc.reference.delete()
 
-        # Clean up the firebase app setup
-        firebase_app = firebase_admin.get_app()
-        firebase_admin.delete_app(firebase_app)
+    # Clean up the firebase app setup
+    firebase_app = firebase_admin.get_app()
+    firebase_admin.delete_app(firebase_app)
 
 
 @pytest.fixture
