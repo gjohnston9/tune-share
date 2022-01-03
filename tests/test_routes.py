@@ -27,6 +27,7 @@ def test_create_multiple_tunes(
         # Save tune
         post_response = client.post(
             '/api/tune', json={'tune_string': tune_string})
+        assert post_response.json
         tune_id = post_response.json['tune_id']
 
         # Validate the tune that was just saved
@@ -46,6 +47,7 @@ def validate_new_tune(
     expected_encoded_tune: str,
     created_at_client_time: datetime,
 ) -> None:
+    assert get_response.json, get_response.data
     data = get_response.json
     created_at_server_time = datetime.fromtimestamp(
         data['created_at'], tz=timezone.utc)

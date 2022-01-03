@@ -1,6 +1,6 @@
 from typing import Generator
 
-import firebase_admin
+import firebase_admin  # type: ignore
 import pytest
 from flask import Flask
 from flask.testing import FlaskClient
