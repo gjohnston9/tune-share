@@ -5,11 +5,13 @@ on:
     branches: [ master ]
 
 jobs:
+  build-master:
+    uses: ./.github/workflows/build-master.yml
   deploy:
+    needs: build-master
     permissions:
       contents: read
       id-token: write
-
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
