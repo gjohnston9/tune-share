@@ -20,6 +20,8 @@ jobs:
       with:
         workload_identity_provider: ${{ secrets.WIF_PROVIDER_NAME }}
         service_account: ${{ secrets.APPENGINE_DEPLOY_SA_EMAIL }}
+        create_credentials_file: true
+        activate_credentials_file: true
 
     - id: deploy
       uses: google-github-actions/deploy-appengine@v0
