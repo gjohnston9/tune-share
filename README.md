@@ -4,6 +4,8 @@
 
 A Flask web app with a simple Javascript piano, with the ability to record a tune and share it.
 
+Try it out at https://tune-share.app!
+
 After you record a tune, an encoding of the tune is stored in a database, along with an associated key. Then, a short URL containing that key is generated - if you give this URL to someone else, they can visit the page and click "Play tune from URL" to play back the same tune that you recorded.
 
 ## Setup
